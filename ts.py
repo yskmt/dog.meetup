@@ -21,19 +21,16 @@ import pandas as pd
 api_key = u'264d5eb00e8ca0a446d714cad1e4a99a'
 api_secret = u'79f9b05a9003ace7'
 
-
 flickr = flickrapi.FlickrAPI(api_key, api_secret, format='parsed-json')
-photos = flickr.photos.search(user_id='44247215@N00', per_page='10')
-sets = flickr.photosets.getList(user_id='44247215@N00')
 
-lat = '37.426463'
-lon = '-122.141527'
+# photos = flickr.photos.search(user_id='44247215@N00', per_page='10')
+# sets = flickr.photosets.getList(user_id='44247215@N00')
 
 lat = '37.788554'
 lon = '-122.408083'
 
 dfs = []
-for i in range(1, 11):
+for i in xrange(11, 101):
     print 'page: ', i
     
     photos = flickr.photos.search(lat=lat, lon=lon, accuracy=15, #radius=2,
@@ -97,19 +94,22 @@ if not database_exists(engine.url):
     create_database(engine.url)
 print(database_exists(engine.url))
 
-dfs.to_sql('photo_data_table', engine, if_exists='replace')
+dfs.to_sql('photo_data_table', engine, if_exists='append')
 
 
 # connect:
 con = None
 con = psycopg2.connect(database = dbname, user = username)
 
+keyword = "restaurant"
+
 sql_query = """
-SELECT latitude, longitude FROM photo_data_table WHERE tags LIKE '%beach%';
-"""
+SELECT id,latitude,longitude,description,tags,url_t FROM photo_data_table WHERE tags LIKE '%{query}%';
+""".format(query=keyword)
 
 photo_data_from_sql = pd.read_sql_query(sql_query,con)
 
 print photo_data_from_sql.shape[0], 'hits'
 
-print photo_data_from_sql.head()
+
+photo_data_from_sql.set_index('id').to_csv('results.csv', encoding='utf-8')

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+		<meta charset="utf-8">
+		<title>Simple markers</title>
+		<style>
+		 html, body {
+			 height: 100%;
+			 margin: 0;
+			 padding: 0;
+		 }
+		 #map {
+			 height: 100%;
+		 }
+		 div.content
+		 {
+			 font-size:10pt;
+			 color:gray;
+		 }
+		</style>
+		<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+
+	</head>
+	<body>
+
+		<div id="map"></div>
+
+		<script>
+		 
+		 function initMap() {
+			 var myLatLng = {lat: 37.788554, lng: -122.408083};
+
+			 var map = new google.maps.Map(document.getElementById('map'), {
+				 zoom: 13,
+				 center: myLatLng
+			 });
+
+			 d3.csv("results.csv", function(data) {
+				 dataset = data.map(function(d) {
+					 return [ +d["id"], +d["latitude"], +d["longitude"],
+							  ["description"], ["tags"], ["url_t"]]; }
+				 );
+
+				 var infowindow = new google.maps.InfoWindow();
+				 
+				 data.forEach(function(d){
+					 var latlng = {lat: parseFloat(d["latitude"]),
+								   lng: parseFloat(d["longitude"])};
+					 var marker = new google.maps.Marker({
+						 position: latlng,
+						 map: map,
+						 title: 'Hello World!'
+					 });
+
+					 /* infowindow */
+					 var contentstring = "<p>" + d["description"] + "<\p>"
+									   + "<p><div class=\"content\">"
+									   + d["tags"] + "</div><\p>"
+									   + "<img src=\""+ d["url_t"] + "\">";
+
+					 marker.addListener('click', function() {
+						 infowindow.setContent(contentstring);
+						 infowindow.open(map, marker);
+					 });
+
+
+				 });
+				 
+			 });
+
+		 }
+
+		</script>
+		<script async defer
+				src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA&signed_in=true&callback=initMap"></script>
+	</body>
+</html>
