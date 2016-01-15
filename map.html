@@ -3,7 +3,7 @@
 	<head>
 		<meta name="viewport" content="initial-scale=1.0, user-scalable=no">
 		<meta charset="utf-8">
-		<title>Simple markers</title>
+		<title>keyword markers</title>
 		<style>
 		 html, body {
 			 height: 100%;
@@ -36,38 +36,53 @@
 				 center: myLatLng
 			 });
 
-			 d3.csv("results.csv", function(data) {
-				 dataset = data.map(function(d) {
-					 return [ +d["id"], +d["latitude"], +d["longitude"],
-							  ["description"], ["tags"], ["url_t"]]; }
-				 );
+			 for (i = 0; i < 2; i++) { 
+				 d3.csv("results_"+i+".csv", function(data) {
+					 dataset = data.map(function(d) {
+						 return [ +d["id"], +d["latitude"], +d["longitude"],
+								  ["description"], ["tags"], ["url_t"]]; }
+					 );
 
-				 var infowindow = new google.maps.InfoWindow();
-				 
-				 data.forEach(function(d){
-					 var latlng = {lat: parseFloat(d["latitude"]),
-								   lng: parseFloat(d["longitude"])};
-					 var marker = new google.maps.Marker({
-						 position: latlng,
-						 map: map,
-						 title: 'Hello World!'
+					 var pinColors = ["FE7569", "3333FF"];
+					 console.log(pinColors);
+					 console.log(i);
+					 
+					 var infowindow = new google.maps.InfoWindow();
+
+					 var pinImage
+					 = new google.maps.MarkerImage(
+						 "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|" + pinColors[i],
+						 new google.maps.Size(21, 34),
+						 new google.maps.Point(0,0),
+						 new google.maps.Point(10, 34));
+
+					 
+					 data.forEach(function(d){
+						 var latlng = {lat: parseFloat(d["latitude"]),
+									   lng: parseFloat(d["longitude"])};
+						 var marker = new google.maps.Marker({
+							 position: latlng,
+							 map: map,
+							 icon: pinImage,
+							 title: 'Hello World!'
+						 });
+
+						 /* infowindow */
+						 var contentstring = "<p>" + d["description"] + "<\p>"
+										   + "<p><div class=\"content\">"
+										   + d["tags"] + "</div><\p>"
+										   + "<img src=\""+ d["url_t"] + "\">";
+
+						 marker.addListener('click', function() {
+							 infowindow.setContent(contentstring);
+							 infowindow.open(map, marker);
+						 });
+
+
 					 });
-
-					 /* infowindow */
-					 var contentstring = "<p>" + d["description"] + "<\p>"
-									   + "<p><div class=\"content\">"
-									   + d["tags"] + "</div><\p>"
-									   + "<img src=\""+ d["url_t"] + "\">";
-
-					 marker.addListener('click', function() {
-						 infowindow.setContent(contentstring);
-						 infowindow.open(map, marker);
-					 });
-
-
+					 
 				 });
-				 
-			 });
+			 }
 
 		 }
 

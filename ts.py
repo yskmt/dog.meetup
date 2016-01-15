@@ -1,7 +1,10 @@
 """
 https://www.flickr.com/services/api/
 
-flickr API limit: under 3600 queries per hour
+Flickr API limit: under 3600 queries per hour
+
+Flickr API only allows maximum 40 pages. After that it gives back duplicates
+https://stackoverflow.com/questions/1994037/flickr-api-returning-duplicate-photos/1996378#1996378
 
 """
 import pdb
@@ -30,10 +33,10 @@ lat = '37.788554'
 lon = '-122.408083'
 
 dfs = []
-for i in xrange(11, 101):
+for i in xrange(1, 41):
     print 'page: ', i
     
-    photos = flickr.photos.search(lat=lat, lon=lon, accuracy=15, #radius=2,
+    photos = flickr.photos.search(lat=lat, lon=lon, accuracy=10, #radius=2,
                                   content_type=1,
                                   extras='geo,tags,url_t,url_m,description,'\
                                   'date_upload,date_taken,machine_tags',
@@ -101,15 +104,28 @@ dfs.to_sql('photo_data_table', engine, if_exists='append')
 con = None
 con = psycopg2.connect(database = dbname, user = username)
 
-keyword = "restaurant"
+keyword = "dog"
+keyword2 = "building"
 
 sql_query = """
-SELECT id,latitude,longitude,description,tags,url_t FROM photo_data_table WHERE tags LIKE '%{query}%';
+SELECT DISTINCT id,latitude,longitude,description,tags,url_t 
+FROM photo_data_table 
+WHERE tags LIKE '%{query}%';
 """.format(query=keyword)
-
 photo_data_from_sql = pd.read_sql_query(sql_query,con)
-
 print photo_data_from_sql.shape[0], 'hits'
 
+photo_data_from_sql.set_index('id').to_csv('results_0.csv', encoding='utf-8')
 
-photo_data_from_sql.set_index('id').to_csv('results.csv', encoding='utf-8')
+
+sql_query2 = """
+SELECT DISTINCT id,latitude,longitude,description,tags,url_t 
+FROM photo_data_table 
+WHERE tags LIKE '%{query}%';
+""".format(query=keyword2)
+photo_data_from_sql2 = pd.read_sql_query(sql_query2, con)
+print photo_data_from_sql2.shape[0], 'hits'
+photo_data_from_sql2.set_index('id').to_csv('results_1.csv', encoding='utf-8')
+
+
+
