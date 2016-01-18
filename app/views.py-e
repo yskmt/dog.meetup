@@ -19,6 +19,8 @@ from app.cluster_photos import latlon_to_dist
 # con = None
 # con = psycopg2.connect(database = dbname, user = user)
 
+default_address = '260 Sheridan Ave, Palo Alto, CA 94306'
+
 username = 'ysakamoto'
 hostname = 'localhost'
 dbname = 'photo_db'
@@ -36,7 +38,7 @@ bbox = '-122.511080,37.712002,-122.381984,37.809776'
 latlon = np.array(map(float, bbox.split(','))).reshape(2,2).mean(axis=0)
 latlon = latlon[1], latlon[0]
 R = 6371.0  # earth radius in km
-radius = 2.0  # km
+radius = 10.0  # km
 x1 = latlon[1] - np.rad2deg(radius/R/np.cos(np.deg2rad(latlon[0])))
 y1 = latlon[0] - np.rad2deg(radius/R)
 x2 = latlon[1] + np.rad2deg(radius/R/np.cos(np.deg2rad(latlon[0])))
@@ -93,7 +95,7 @@ def cesareans_input():
 
 @app.route('/output')
 def cesareans_output():
-   query_tag = request.args.get('tag')
+   query_tag = request.args.get('address')
 
    sql_query = """
 SELECT DISTINCT id,latitude,longitude,description,tags,url_t 
@@ -123,8 +125,12 @@ AND tags LIKE '%{tag}%';
 
 @app.route('/map')
 def map_output():
-   query_tag = request.args.get('tag')
+   query_address = request.args.get('address')
+   query_time = request.args.get('time')
 
+   if query_address == '':
+       query_address = default_address
+   
    sql_query = """
 SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t 
 FROM photo_data_table
@@ -132,8 +138,10 @@ WHERE latitude > {lat_min} AND latitude < {lat_max}
 AND longitude > {lon_min} AND longitude < {lon_max}
 AND tags LIKE '%{tag}%'
 AND DATE_PART('hour', datetaken) = {hour};
-""".format(lat_min=sbox[1], lat_max=sbox[3], lon_min=sbox[0], lon_max=sbox[2],
-           tag=query_tag, hour=15)
+""".format(lat_min=sbox[1], lat_max=sbox[3],
+           lon_min=sbox[0], lon_max=sbox[2],
+           tag='dog',
+           hour=query_time)
    
    query_results = pd.read_sql_query(sql_query, con)
    the_result = ''
@@ -153,7 +161,9 @@ AND DATE_PART('hour', datetaken) = {hour};
    xyh = pd.concat([xy[['x', 'y']], hours], axis=1)
 
    # -1 for noisy samples
-   labels = DBSCAN(eps=0.1, metric='euclidean', random_state=0)\
+   # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html
+   labels = DBSCAN(eps=0.15, metric='euclidean', min_samples=10,
+                   random_state=0)\
             .fit_predict(xyh)
 
    # add labels to dataframe
@@ -166,5 +176,7 @@ AND DATE_PART('hour', datetaken) = {hour};
    
    return render_template("map.html",
                           photos=query_results.to_dict(orient='index'),
-                          the_result=the_result,
+                          num_labels=len(set(query_results['label'])),
+                          address=query_address,
+                          time=query_time,
                           center=latlon)

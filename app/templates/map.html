@@ -85,13 +85,21 @@
 		<div class="container">
 			<div class="starter-template">
 				<h3>Results:</h3>
-				<p class="lead">Below is the result of your query.<br> You just took user input and looked up the information. Now we need to expand the functionality!</p>
-				
+				<p class="lead">Below is the result of your query for:
+					<p class="lead"><b>Address</b>: {{ address }}</p>
+					<p class="lead"><b>Time</b>: {{ time }}</p>
+				</p>
 			</div>
-			<div id="map" style="width: 1120px; height: 1120px; border: 0px"></div>
+			
+			<div id="map" style="width: 1120px; height: 600px; border: 0px"></div>
 
 			<script>
 
+			 var linspace = function(start, stop, nsteps){
+				 delta = (stop-start)/(nsteps-1)
+					 return d3.range(start, stop+delta, delta).slice(0, nsteps)
+			 }
+			 
 			 
 			 function initMap() {
 				 /* 
@@ -107,9 +115,14 @@
 					 center: myLatLng
 				 });
 
-				 var pinColors = d3.scale.category20().range();
-
 				 var dataset = {{ photos|tojson }};
+				 var num_labels = {{ num_labels }};
+				 
+				 var colors20 = d3.scale.category20().range();
+				 
+				 var pinColors = d3.scale.linear()
+								   .domain(linspace(0, num_labels, 20))
+								   .range(colors20);
 
 				 var infowindow = new google.maps.InfoWindow();
 
@@ -122,7 +135,7 @@
 						 strokeColor: 'gray',
 						 strokeOpacity: 0.8,
 						 strokeWeight: 1,
-						 fillColor: pinColors[parseInt(d["label"])],
+						 fillColor: pinColors(parseInt(d["label"])),
 						 fillOpacity: 0.35,
 						 map: map,
 						 center: latlng,
