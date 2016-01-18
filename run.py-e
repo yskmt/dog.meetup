@@ -1,4 +1,4 @@
 #!/Users/ysakamoto/anaconda/bin/python
-from flaskexample import app
+from app import app
 app.run(debug = True)
 

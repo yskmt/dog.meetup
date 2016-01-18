@@ -1,5 +1,5 @@
 from flask import render_template
-from flaskexample import app
+from app import app
 from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists, create_database
 import pandas as pd
@@ -7,6 +7,10 @@ import psycopg2
 from flask import request
 
 import numpy as np
+from sklearn.cluster import DBSCAN
+
+from app.cluster_photos import latlon_to_dist
+
 
 # user = 'Katie' #add your username here (same as previous postgreSQL)
 # host = 'localhost'
@@ -122,18 +126,44 @@ def map_output():
    query_tag = request.args.get('tag')
 
    sql_query = """
-SELECT DISTINCT id,latitude,longitude,description,tags,url_t 
+SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t 
 FROM photo_data_table
 WHERE latitude > {lat_min} AND latitude < {lat_max} 
 AND longitude > {lon_min} AND longitude < {lon_max}
-AND tags LIKE '%{tag}%';
+AND tags LIKE '%{tag}%'
+AND DATE_PART('hour', datetaken) = {hour};
 """.format(lat_min=sbox[1], lat_max=sbox[3], lon_min=sbox[0], lon_max=sbox[2],
-           tag=query_tag)
+           tag=query_tag, hour=15)
    
    query_results = pd.read_sql_query(sql_query, con)
    the_result = ''
 
-   print latlon
+   # convert latlon to xy coordinate in km
+   xy = query_results[['latitude', 'longitude']]\
+        .apply(lambda x: latlon_to_dist(x, latlon), axis=1)
+   xy = pd.DataFrame(xy, columns=['xy'])   
+   for n, col in enumerate(['x', 'y']):
+       xy[col] = xy['xy'].apply(lambda location: location[n])
+   
+   # convert datetaken to hour taken
+   # scale: 1.0 means that 1 hour corresponds to 1 km
+   scale = 1.0
+   hours = query_results['datetaken'].apply(lambda x: x.hour) * scale
+
+   xyh = pd.concat([xy[['x', 'y']], hours], axis=1)
+
+   # -1 for noisy samples
+   labels = DBSCAN(eps=0.1, metric='euclidean', random_state=0)\
+            .fit_predict(xyh)
+
+   # add labels to dataframe
+   query_results = pd.concat([query_results,
+                              pd.DataFrame(labels, columns=['label'])],
+                             axis=1)
+
+   # drop -1s
+   query_results = query_results[query_results['label']!=-1]
+   
    return render_template("map.html",
                           photos=query_results.to_dict(orient='index'),
                           the_result=the_result,

@@ -86,68 +86,79 @@
 			<div class="starter-template">
 				<h3>Results:</h3>
 				<p class="lead">Below is the result of your query.<br> You just took user input and looked up the information. Now we need to expand the functionality!</p>
-			
+				
 			</div>
-			<div id="map" style="width: 500px; height: 500px; border: 0px"></div>
+			<div id="map" style="width: 1120px; height: 1120px; border: 0px"></div>
 
 			<script>
+
 			 
-			 $('div#map').attr("width", $(window).width())
-			 $('div#map').attr("height", $(window).width())
-			 	 
-				 function initMap() {
+			 function initMap() {
+				 /* 
+					$('div#map').attr("width", $("div.container").width());
+					$('div#map').attr("height", $("div.container").width()); */
 
-					 var myLatLng = {lat:{{ center[0] }},
-									 lng:{{ center[1] }}}
+				 
+				 var myLatLng = {lat:{{ center[0] }},
+								 lng:{{ center[1] }}}
+				 
+				 var map = new google.maps.Map(document.getElementById('map'), {
+					 zoom: 13,
+					 center: myLatLng
+				 });
+
+				 var pinColors = d3.scale.category20().range();
+
+				 var dataset = {{ photos|tojson }};
+
+				 var infowindow = new google.maps.InfoWindow();
+
+				 jQuery.each(dataset, function(i, d) {
 					 
-					 var map = new google.maps.Map(document.getElementById('map'), {
-						 zoom: 13,
-						 center: myLatLng
-					 });
-
-					 var pinColors = d3.scale.category20().range();
-
-					 var dataset = {{ photos|tojson }};
-
-					 var infowindow = new google.maps.InfoWindow();
-
-					 jQuery.each(dataset, function(i, d) {
-						 
-						 var latlng = {lat: parseFloat(d["latitude"]),
-									   lng: parseFloat(d["longitude"])};
-
-						 var circle = new google.maps.Circle({
-							 strokeColor: 'gray',
-							 strokeOpacity: 0.8,
-							 strokeWeight: 1,
-							 fillColor: pinColors[1],
-							 fillOpacity: 0.35,
-							 map: map,
-							 center: latlng,
-							 position:latlng,
-							 radius: 100
-						 });
-
-						 var contentstring = "<p>" + d["description"] + "<\p>"
-										   + "<p><div class=\"content\">"
-										   + d["tags"] + "</div><\p>"
-										   + "<img src=\""+ d["url_t"] + "\">";
-
-						 circle.addListener('click', function() {
-							 infowindow.setContent(contentstring);
-							 infowindow.open(map, circle);
-						 });
-
-					 });
-
-					 var marker = new google.maps.Marker({
-						 position: myLatLng,
+					 var latlng = {lat: parseFloat(d["latitude"]),
+								   lng: parseFloat(d["longitude"])};
+					 
+					 var circle = new google.maps.Circle({
+						 strokeColor: 'gray',
+						 strokeOpacity: 0.8,
+						 strokeWeight: 1,
+						 fillColor: pinColors[parseInt(d["label"])],
+						 fillOpacity: 0.35,
 						 map: map,
-						 title: 'center'
+						 center: latlng,
+						 position:latlng,
+						 radius: 100
+					 });
+					 
+					 
+					 /* 
+						var circle = new google.maps.Marker({
+						position: latlng,
+						map: map
+						});
+					  */
+					 var contentstring = "<p>" + d["description"] + "<\p>"
+									   + "<p><div class=\"content\">"
+									   + d["tags"] + "</div><\p>"
+									   + "<img src=\""+ d["url_t"] + "\">"
+									   + "<p>" + d["datetaken"] + "</p>"
+									   + "<p>" + d["label"] + "</p>";
+
+					 circle.addListener('click', function() {
+						 infowindow.setContent(contentstring);
+						 infowindow.open(map, circle);
 					 });
 
-					 
-				 }
+				 });
+
+				 var marker = new google.maps.Marker({
+					 position: myLatLng,
+					 map: map,
+					 title: 'center'
+				 });
+
+				 
+			 }
 
 			</script>
 
