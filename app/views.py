@@ -82,23 +82,23 @@ def map_output():
 
     sbox = get_bbox(query_latlon, query_distance)
 
-#     sql_query = """
-# SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t 
-# FROM photo_data_table
-# WHERE latitude > {lat_min} AND latitude < {lat_max} 
-# AND longitude > {lon_min} AND longitude < {lon_max}
-# AND tags LIKE '%{tag}%'
-# """.format(lat_min=sbox[1], lat_max=sbox[3],
-#            lon_min=sbox[0], lon_max=sbox[2],
-#            tag='dog')
-
     sql_query = """
 SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t 
 FROM photo_data_table
 WHERE latitude > {lat_min} AND latitude < {lat_max} 
 AND longitude > {lon_min} AND longitude < {lon_max}
+AND tags LIKE '%{tag}%'
 """.format(lat_min=sbox[1], lat_max=sbox[3],
-           lon_min=sbox[0], lon_max=sbox[2])
+           lon_min=sbox[0], lon_max=sbox[2],
+           tag='dog')
+
+#     sql_query = """
+# SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t 
+# FROM photo_data_table
+# WHERE latitude > {lat_min} AND latitude < {lat_max} 
+# AND longitude > {lon_min} AND longitude < {lon_max}
+# """.format(lat_min=sbox[1], lat_max=sbox[3],
+#            lon_min=sbox[0], lon_max=sbox[2])
 
     query_results = pd.read_sql_query(sql_query, con)
 
@@ -126,7 +126,7 @@ AND longitude > {lon_min} AND longitude < {lon_max}
                                center=query_latlon)
     
     # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html
-    labels = DBSCAN(eps=0.15, metric='euclidean', min_samples=10,
+    labels = DBSCAN(eps=0.05, metric='euclidean', min_samples=10,
                     random_state=0)\
                     .fit_predict(xy[['x','y']])
 

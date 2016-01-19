@@ -31,7 +31,7 @@
 						<span class="icon-bar"></span>
 						<span class="icon-bar"></span>
 					</button>
-					<a class="navbar-brand" href="#">Dog.Meetup</a>
+					<a class="navbar-brand" href="#">Dog.Meetup z</a>
 				</div>
 				<div id="navbar" class="collapse navbar-collapse">
 					<ul class="nav navbar-nav">
@@ -117,7 +117,9 @@
 				<h5><b>Time</b>: {{ time }}</h5>
 				<h5><b>Distance</b>: {{ distance }} km</h5>
 			</div>
-			
+
+			<button onclick="toggleHeatmap()">Toggle Heatmap</button>
+
 			<div id="map" style="width: 1120px; height: 600px; border: 0px"></div>
 
 			<!-- render map -->
@@ -128,6 +130,9 @@
 					 return d3.range(start, stop+delta, delta).slice(0, nsteps)
 			 }
 			 
+			 var map;
+			 var heatmap;
+			 var heatpoints = [];
 			 
 			 function initMap() {
 				 /* 
@@ -137,12 +142,18 @@
 				 var myLatLng = {lat:{{ center[0] }},
 								 lng:{{ center[1] }}}
 				 
-				 var map = new google.maps.Map(document.getElementById('map'), {
+				 map = new google.maps.Map(document.getElementById('map'), {
 					 zoom: 13,
 					 center: myLatLng,
 					 scaleControl: true
 				 });
-
+				 
+				 heatmap = new google.maps.visualization.HeatmapLayer({
+					 data: getPoints(),
+					 map: map,
+					 radius: 15
+				 });
+				 
 				 var dataset = {{ photos|tojson }};
 				 var num_labels = {{ num_labels }};
 				 var clusters = {{ clusters|tojson }};
@@ -156,29 +167,7 @@
 				 var infowindow = new google.maps.InfoWindow();
 
 				 /* plot clusters */
-				 jQuery.each(clusters, function(i, d) {
-					 
-					 var latlng = {lat: parseFloat(d["latitude"]),
-								   lng: parseFloat(d["longitude"])};
-
-					 var circle = new google.maps.Marker({
-						 position: latlng,
-						 icon: {
-							 path: google.maps.SymbolPath.CIRCLE,
-							 fillOpacity: 0.5,
-							 fillColor: pinColors(parseInt(i)),
-							 strokeOpacity: 1.0,
-							 strokeColor: 'gray',
-							 strokeWeight: 1.0, 
-							 scale: 2*parseFloat(d['num_pics'])
-						 },
-						 map: map
-					 });
-
-				 });
-
-				 /* plot individual photos */
-				 /* jQuery.each(dataset, function(i, d) {
+				 /* jQuery.each(clusters, function(i, d) {
 					
 					var latlng = {lat: parseFloat(d["latitude"]),
 					lng: parseFloat(d["longitude"])};
@@ -188,34 +177,62 @@
 					icon: {
 					path: google.maps.SymbolPath.CIRCLE,
 					fillOpacity: 0.5,
-					fillColor: pinColors(parseInt(d["label"])),
+					fillColor: pinColors(parseInt(i)),
 					strokeOpacity: 1.0,
 					strokeColor: 'gray',
 					strokeWeight: 1.0, 
-					scale: 10
+					scale: 2*parseFloat(d['num_pics'])
 					},
 					map: map
 					});
 
-					var contentstring = "<p>" + d["description"] + "<\p>"
-					+ "<p><div class=\"content\">"
-					+ d["tags"] + "</div><\p>"
-					+ "<img src=\""+ d["url_t"] + "\">"
-					+ "<p>" + d["datetaken"] + "</p>"
-					+ "<p>" + d["label"] + "</p>";
-
-					circle.addListener('click', function() {
-					infowindow.setContent(contentstring);
-					infowindow.open(map, circle);
-					});
-
-					});
-
-					var marker = new google.maps.Marker({
-					position: myLatLng,
-					map: map,
-					title: 'center'
 					}); */
+
+				 /* plot individual photos */
+				 jQuery.each(dataset, function(i, d) {
+
+					 heatpoints.push(new google.maps.LatLng(parseFloat(d["latitude"]),
+															parseFloat(d["longitude"])));
+					 /* 
+						var latlng = {lat: parseFloat(d["latitude"]),
+						lng: parseFloat(d["longitude"])};
+						
+						var circle = new google.maps.Marker({
+						position: latlng,
+						icon: {
+						path: google.maps.SymbolPath.CIRCLE,
+						fillOpacity: 0.5,
+						fillColor: pinColors(parseInt(d["label"])),
+						strokeOpacity: 1.0,
+						strokeColor: 'gray',
+						strokeWeight: 1.0, 
+						scale: 10
+						},
+						map: map
+						});
+
+						var contentstring = "<p>" + d["description"] + "<\p>"
+						+ "<p><div class=\"content\">"
+						+ d["tags"] + "</div><\p>"
+						+ "<img src=\""+ d["url_t"] + "\">"
+						+ "<p>" + d["datetaken"] + "</p>"
+						+ "<p>" + d["label"] + "</p>";
+
+						circle.addListener('click', function() {
+						infowindow.setContent(contentstring);
+						infowindow.open(map, circle);
+						}); */
+					 
+				 });
+
+				 var marker = new google.maps.Marker({
+					 position: myLatLng,
+					 map: map,
+					 title: 'center'
+				 });
+
+				 /* 				 Heatmap */
+				 console.log(getPoints());
 
 				 /* scroll after map is loaded */
 				 $("body, html").animate({ 
@@ -223,15 +240,23 @@
 				 }, 600);
 			 }
 			 
+			 function getPoints() {
+				 return heatpoints;
+			 }
+			 
+			 function toggleHeatmap() {
+				 heatmap.setMap(heatmap.getMap() ? null : map);
+			 }
+			 
 			</script>
 
 			<script async defer
-					src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA&signed_in=true&callback=initMap"></script>
+					src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA&signed_in=true&libraries=visualization&callback=initMap"></script>
 
 			<!-- Bootstrap core JavaScript
 				 ================================================== -->
 			<!-- Placed at the end of the document so the pages load faster -->
 			<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-
+			
 	</body>
 </html>
