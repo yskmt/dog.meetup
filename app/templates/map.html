@@ -166,14 +166,23 @@
 				 
 				 var dataset = {{ photos|tojson }};
 				 var num_labels = {{ num_labels }};
+				 var max_label = {{ max_label }}
 				 var clusters = {{ clusters|tojson }};
 				 
 				 var colors20 = d3.scale.category20().range();
+
+				 if (max_label >= 20){
+					 var pinColors = d3.scale.linear()
+									   .domain(linspace(0, max_label-1, 20))
+									   .range(colors20);
+				 }
+				 else{
+					 var pinColors = d3.scale.linear()
+									   .domain(linspace(0, max_label-1, 20))
+									   .range(colors20.slice(0, max_label-1));
+				 }
 				 
-				 var pinColors = d3.scale.linear()
-								   .domain(linspace(0, num_labels-1, 20))
-								   .range(colors20);
-				 console.log(linspace(0, num_labels-1, 20));
+				 console.log(linspace(0, max_label-1, 20));
 				 console.log(colors20);
 				 
 				 var infowindow = new google.maps.InfoWindow();
@@ -206,7 +215,7 @@
 					 heatpoints.push(new google.maps.LatLng(parseFloat(d["latitude"]),
 															parseFloat(d["longitude"])));
 
-					 var pc = pinColors(parseFloat(d["label"])/(num_labels)*20);
+					 var pc = pinColors(parseFloat(d["label"]));
 					 var latlng = {lat: parseFloat(d["latitude"]),
 								   lng: parseFloat(d["longitude"])};
 					 

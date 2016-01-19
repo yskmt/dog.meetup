@@ -1,4 +1,6 @@
 """
+
+Flickr API:
 https://www.flickr.com/services/api/
 
 Flickr API limit: under 3600 queries per hour
@@ -6,9 +8,13 @@ Flickr API limit: under 3600 queries per hour
 Flickr API only allows maximum 40 pages. After that it gives back duplicates
 https://stackoverflow.com/questions/1994037/flickr-api-returning-duplicate-photos/1996378#1996378
 
-
+# launch postgres
 postgres -D /usr/local/var/postgres
+
+# start psql and connect to photo database:
 psql -h localhost
+\c photo_db
+
 
 
 """
@@ -33,7 +39,7 @@ from sqlalchemy_utils import database_exists, create_database
 import psycopg2
 
 import matplotlib.pyplot as plt
-import seaborn
+import seaborn as sb
 
 import numpy as np
 
@@ -75,13 +81,16 @@ def get_pics(year, bbox):
     for i in xrange(1, 41):
         print 'page: ', i
 
+        # geo_context -  0: not defined, 1: indoors, 2: outdoors
+
         # lat=lat, lon=lon, radius=19
         photos = flickr.photos.search(bbox=bbox,
                                       content_type=1,
                                       text='dog',
                                       min_upload_date=str(utime_min),
                                       max_upload_date=str(utime_max),
-                                      extras='geo,tags,url_t,url_m,description,'\
+                                      extras='geo,tags,url_t,url_m,url_o,'\
+                                      'description,owner_name,views,path_alias,'\
                                       'date_upload,date_taken,machine_tags',
                                       per_page='250', page=i)
 
@@ -95,6 +104,32 @@ def get_pics(year, bbox):
         df_photos['id'] = df_photos['id'].astype(int)
         df_photos.set_index('id', inplace=True)
 
+        # access to photo page
+        # "https://www.flickr.com/photos/{user_id}/{photo_id}".format(user_id=df_photos.owner.iloc[0], photo_id=df_photos.index[0])
+        
+        # convert to int
+        # height_o, pathalias, url_o, width_o can be null (_o for original)
+        df_photos[['accuracy','context',
+                   'datetakengranularity','datetakenunknown',
+                   'farm',
+                   'geo_is_contact','geo_is_family',
+                   'geo_is_friend','geo_is_public',
+                   'height_t','height_m','height_o',
+                   'isfamily', 'ispublic', 'isfriend',
+                   'server','views',
+                   'width_t','width_m','width_o',
+                   'woeid']]\
+                   = df_photos[['accuracy','context',
+                                'datetakengranularity','datetakenunknown',
+                                'farm',
+                                'geo_is_contact','geo_is_family',
+                                'geo_is_friend','geo_is_public',
+                                'height_t','height_m','height_o',
+                                'isfamily', 'ispublic', 'isfriend',
+                                'server','views',
+                                'width_t','width_m','width_o',
+                                'woeid']].fillna(0).astype(int)
+            
         # just take the content of the dictionary
         df_photos['description'] \
             = df_photos['description'].apply(lambda x: x['_content'])
@@ -131,7 +166,8 @@ if not database_exists(engine.url):
     create_database(engine.url)
 print(database_exists(engine.url))
 
-for yr in xrange(2010, 2017):
+# 2001 - 2016
+for yr in xrange(2000, 2010):
     print 'year', yr
     dfs = get_pics(yr, bbox)
 

@@ -178,6 +178,7 @@ AND tags LIKE '%{tag}%';
     return render_template("map.html",
                            photos=query_results.to_dict(orient='index'),
                            num_labels=len(set(query_results['label'])),
+                           max_label=query_results['label'].max(),
                            address=query_address,
                            time=datetime.strptime(str(query_time), "%H").strftime("%-I %p"),
                            distance=query_distance,
