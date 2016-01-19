@@ -9,7 +9,7 @@ from flask import request
 import numpy as np
 from sklearn.cluster import DBSCAN
 
-from geopy.geocoders import Nominatim
+from geopy.geocoders import Nominatim, GoogleV3 
 
 from app.cluster_photos import latlon_to_dist, get_bbox
 
@@ -61,15 +61,23 @@ def map_output():
         query_address = default_address
 
     if query_latlon is None:
-        geolocator = Nominatim()
-        location = geolocator.geocode(query_address)
+        # try openmap geocoder first
+        try:
+            geolocator = Nominatim()
+            location = geolocator.geocode(query_address)
+        except:
+            geolocator = GoogleV3(api_key='AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA')
+            location = geolocator.geocode(query_address)
         query_latlon = (location.latitude, location.longitude)
-
+            
     print 'latlon = ', query_latlon
     print 'time = ', query_time
     print 'address = ', query_address
+    print 'distance = ', query_distance
 
     sbox = get_bbox(query_latlon, query_distance)
+
+    print sbox
     
     sql_query = """
 SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t 
