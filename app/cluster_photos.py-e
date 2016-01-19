@@ -59,5 +59,26 @@ def latlon_to_dist(latlon, center, R=6371.0):
     return x, y
 
 
+def get_bbox(center, radius=10.0, R=6371.0):
+    """
+    Get a bounding box (square) around center (lat, lng)
+    
+    return: southwest, northeast lat/lng
+    """
 
-print latlon_to_dist((37.751111, -122.433898), (37.760888999999999, -122.446532))
+    r = radius/2.0
+    
+    # calculate the bounding box
+    x1 = center[1] - np.rad2deg(r/R/np.cos(np.deg2rad(center[0])))
+    y1 = center[0] - np.rad2deg(r/R)
+    x2 = center[1] + np.rad2deg(r/R/np.cos(np.deg2rad(center[0])))
+    y2 = center[0] + np.rad2deg(r/R)
+
+    return [x1, y1, x2, y2]
+
+
+
+
+if __name__ == "__main__":
+    print latlon_to_dist(
+        (37.751111, -122.433898), (37.760888999999999, -122.446532))

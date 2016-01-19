@@ -97,7 +97,8 @@
 				 
 				 var map = new google.maps.Map(document.getElementById('map'), {
 					 zoom: 13,
-					 center: myLatLng
+					 center: myLatLng,
+					 scaleControl: true
 				 });
 
 				 var dataset = {{ photos|tojson }};
@@ -133,7 +134,7 @@
 					 var contentstring = "<p>" + d["description"] + "<\p>"
 									   + "<p><div class=\"content\">"
 									   + d["tags"] + "</div><\p>"
-					 /* 									   + "<img src=\""+ d["url_t"] + "\">" */
+					 				   + "<img src=\""+ d["url_t"] + "\">"
 									   + "<p>" + d["datetaken"] + "</p>"
 									   + "<p>" + d["label"] + "</p>";
 
