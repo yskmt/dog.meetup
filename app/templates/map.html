@@ -31,7 +31,7 @@
 						<span class="icon-bar"></span>
 						<span class="icon-bar"></span>
 					</button>
-					<a class="navbar-brand" href="#">Project name</a>
+					<a class="navbar-brand" href="#">Dog.Meetup</a>
 				</div>
 				<div id="navbar" class="collapse navbar-collapse">
 					<ul class="nav navbar-nav">
@@ -145,6 +145,7 @@
 
 				 var dataset = {{ photos|tojson }};
 				 var num_labels = {{ num_labels }};
+				 var clusters = {{ clusters|tojson }};
 				 
 				 var colors20 = d3.scale.category20().range();
 				 
@@ -154,7 +155,8 @@
 
 				 var infowindow = new google.maps.InfoWindow();
 
-				 jQuery.each(dataset, function(i, d) {
+				 /* plot clusters */
+				 jQuery.each(clusters, function(i, d) {
 					 
 					 var latlng = {lat: parseFloat(d["latitude"]),
 								   lng: parseFloat(d["longitude"])};
@@ -164,34 +166,56 @@
 						 icon: {
 							 path: google.maps.SymbolPath.CIRCLE,
 							 fillOpacity: 0.5,
-							 fillColor: pinColors(parseInt(d["label"])),
+							 fillColor: pinColors(parseInt(i)),
 							 strokeOpacity: 1.0,
 							 strokeColor: 'gray',
 							 strokeWeight: 1.0, 
-							 scale: 10
+							 scale: 2*parseFloat(d['num_pics'])
 						 },
 						 map: map
 					 });
 
-					 var contentstring = "<p>" + d["description"] + "<\p>"
-									   + "<p><div class=\"content\">"
-									   + d["tags"] + "</div><\p>"
-					 				   + "<img src=\""+ d["url_t"] + "\">"
-									   + "<p>" + d["datetaken"] + "</p>"
-									   + "<p>" + d["label"] + "</p>";
-
-					 circle.addListener('click', function() {
-						 infowindow.setContent(contentstring);
-						 infowindow.open(map, circle);
-					 });
-
 				 });
 
-				 var marker = new google.maps.Marker({
-					 position: myLatLng,
-					 map: map,
-					 title: 'center'
-				 });
+				 /* plot individual photos */
+				 /* jQuery.each(dataset, function(i, d) {
+					
+					var latlng = {lat: parseFloat(d["latitude"]),
+					lng: parseFloat(d["longitude"])};
+
+					var circle = new google.maps.Marker({
+					position: latlng,
+					icon: {
+					path: google.maps.SymbolPath.CIRCLE,
+					fillOpacity: 0.5,
+					fillColor: pinColors(parseInt(d["label"])),
+					strokeOpacity: 1.0,
+					strokeColor: 'gray',
+					strokeWeight: 1.0, 
+					scale: 10
+					},
+					map: map
+					});
+
+					var contentstring = "<p>" + d["description"] + "<\p>"
+					+ "<p><div class=\"content\">"
+					+ d["tags"] + "</div><\p>"
+					+ "<img src=\""+ d["url_t"] + "\">"
+					+ "<p>" + d["datetaken"] + "</p>"
+					+ "<p>" + d["label"] + "</p>";
+
+					circle.addListener('click', function() {
+					infowindow.setContent(contentstring);
+					infowindow.open(map, circle);
+					});
+
+					});
+
+					var marker = new google.maps.Marker({
+					position: myLatLng,
+					map: map,
+					title: 'center'
+					}); */
 
 				 /* scroll after map is loaded */
 				 $("body, html").animate({ 

@@ -141,11 +141,24 @@ AND longitude > {lon_min} AND longitude < {lon_max}
     # return only for the specified hour
     hours = query_results['datetaken'].apply(lambda x: x.hour)
     query_results = query_results[hours==query_time]
+
+    # note the existence of -1 group
+    # gather cluster characteristics
+    lb_unique, num_pics = np.unique(labels, return_counts=True)
+    num_pics = dict(zip(lb_unique, num_pics))
+    centroids = query_results.groupby('label').mean().transpose().to_dict()
+    for key, value in centroids.iteritems():
+        value['num_pics'] = np.sqrt(num_pics[key])
         
+    # cov = np.sqrt(np.cov(query_results[['latitude','longitude']].T))
+    # mean = np.mean(query_results[['latitude','longitude']].T, axis=1)
+    
     return render_template("map.html",
                            photos=query_results.to_dict(orient='index'),
                            num_labels=len(set(query_results['label'])),
                            address=query_address,
                            time=datetime.strptime(str(query_time), "%H").strftime("%-I %p"),
                            distance=query_distance,
+                           clusters=centroids,
+                           
                            center=query_latlon)
