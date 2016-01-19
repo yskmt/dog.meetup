@@ -8,6 +8,7 @@ from flask import request
 
 import numpy as np
 from sklearn.cluster import DBSCAN
+from datetime import datetime
 
 from geopy.geocoders import Nominatim, GoogleV3 
 
@@ -49,9 +50,13 @@ def cesareans_input():
 @app.route('/map', methods=['GET'])
 def map_output():
     query_address = request.args.get('address')
-    query_time = request.args.get('time')
-    query_distance = float(request.args.get('distance'))
-    
+    query_time = int(request.args.get('time'))
+
+    try:
+        query_distance = float(request.args.get('distance'))
+    except ValueError:
+        query_distance = 5.0
+        
     try:
         query_latlon = float(request.args.get('lat')), float(request.args.get('lon'))
     except:
@@ -77,22 +82,25 @@ def map_output():
 
     sbox = get_bbox(query_latlon, query_distance)
 
-    print sbox
-    
+#     sql_query = """
+# SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t 
+# FROM photo_data_table
+# WHERE latitude > {lat_min} AND latitude < {lat_max} 
+# AND longitude > {lon_min} AND longitude < {lon_max}
+# AND tags LIKE '%{tag}%'
+# """.format(lat_min=sbox[1], lat_max=sbox[3],
+#            lon_min=sbox[0], lon_max=sbox[2],
+#            tag='dog')
+
     sql_query = """
 SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t 
 FROM photo_data_table
 WHERE latitude > {lat_min} AND latitude < {lat_max} 
 AND longitude > {lon_min} AND longitude < {lon_max}
-AND tags LIKE '%{tag}%'
-AND DATE_PART('hour', datetaken) = {hour};
 """.format(lat_min=sbox[1], lat_max=sbox[3],
-           lon_min=sbox[0], lon_max=sbox[2],
-           tag='dog',
-           hour=query_time)
-   
+           lon_min=sbox[0], lon_max=sbox[2])
+
     query_results = pd.read_sql_query(sql_query, con)
-    the_result = ''
 
     # convert latlon to xy coordinate in km
     xy = query_results[['latitude', 'longitude']]\
@@ -103,16 +111,24 @@ AND DATE_PART('hour', datetaken) = {hour};
        
     # convert datetaken to hour taken
     # scale: 1.0 means that 1 hour corresponds to 1 km
-    scale = 1.0
-    hours = query_results['datetaken'].apply(lambda x: x.hour) * scale
+    # scale = 1.0
+    # hours = query_results['datetaken'].apply(lambda x: x.hour) * scale
+    # xyh = pd.concat([xy[['x', 'y']], hours], axis=1)
 
-    xyh = pd.concat([xy[['x', 'y']], hours], axis=1)
-
-    # -1 for noisy samples
+    # no photos around the center
+    if xy[['x','y']].shape[0] == 0:
+        return render_template("map.html",
+                               photos=[{}],
+                               num_labels=1,
+                               address=query_address,
+                               time=query_time,
+                               distance=query_distance,
+                               center=query_latlon)
+    
     # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html
     labels = DBSCAN(eps=0.15, metric='euclidean', min_samples=10,
                     random_state=0)\
-                    .fit_predict(xyh)
+                    .fit_predict(xy[['x','y']])
 
     # add labels to dataframe
     query_results = pd.concat([query_results,
@@ -121,10 +137,15 @@ AND DATE_PART('hour', datetaken) = {hour};
 
     # drop -1s
     query_results = query_results[query_results['label']!=-1]
-   
+
+    # return only for the specified hour
+    hours = query_results['datetaken'].apply(lambda x: x.hour)
+    query_results = query_results[hours==query_time]
+        
     return render_template("map.html",
                            photos=query_results.to_dict(orient='index'),
                            num_labels=len(set(query_results['label'])),
                            address=query_address,
-                           time=query_time,
+                           time=datetime.strptime(str(query_time), "%H").strftime("%-I %p"),
+                           distance=query_distance,
                            center=query_latlon)

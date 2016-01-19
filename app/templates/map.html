@@ -47,22 +47,64 @@
 		
 		<div class="container">
 			<div class="starter-template">
-				<h2>Map Page</h2>
-				<p>Enter some user input</p>
-			</div>
+				<h2>Dog.Meetup</h2>
+				<p>Enter information blow</p>
 
-			<div class = "container">
+				<div class = "container">
 
-				<form  action="/map" method="GET">
-					<div class="form-group">
-						<label for="query_tag">Query tag:</label>
-						<input type="text" id="tag" name='tag' placeholder="e.g. ">
-					</div>
-					<div>
-						<button type="submit" class="btn btn-default btn-lg">Find these Cesareans!</button>
-					</div>
-				</form>
+					<form  action="/map" method="GET">
+						<div class="form-group">
+							<label for="query_tag">Your address:</label>
+							<input type="text" id="address" size="50" name='address'
+								   id="address"
+								   placeholder="260 Sheridan Ave, Palo Alto, CA 94306">
+
+							<label for="query_distance">within:</label>
+							<input type="number" id="distance" size="5"
+								   name='distance' value="5" 
+								   placeholder="5" min="1"> km.
+							
+							<label for="query_time">Time:</label>
+							<select class="input-small" id="time" name="time">
+								<option value="0">12 AM</option>
+								<option value="1"> 1 AM</option>
+								<option value="2"> 2 AM</option>
+								<option value="3"> 3 AM</option>
+								<option value="4"> 4 AM</option>
+								<option value="5"> 5 AM</option>
+								<option value="6"> 6 AM</option>
+								<option value="7"> 7 AM</option>
+								<option value="8"> 8 AM</option>
+								<option value="9"> 9 AM</option>
+								<option value="10">10 AM</option>
+								<option value="11">11 AM</option>
+								<option value="12">12 PM</option>
+								<option value="13"> 1 PM</option>
+								<option value="14"> 2 PM</option>
+								<option value="15"> 3 PM</option>
+								<option value="16"> 4 PM</option>
+								<option value="17"> 5 PM</option>
+								<option value="18"> 6 PM</option>
+								<option value="19"> 7 PM</option>
+								<option value="20"> 8 PM</option>
+								<option value="21"> 9 PM</option>
+								<option value="22">10 PM</option>
+								<option value="23">11 PM</option>
+							</select>
+							
+						</div>
+						
+						<div>
+							<button type="submit" id="submit"
+									class="btn btn-default btn-lg">
+								Find dogs around your area!
+							</button>
+						</div>
+
+					</form>
+				</div>
 			</div>
+			
 			<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
 			<script src="static/js/bootstrap.min.js"></script>
 
@@ -70,15 +112,15 @@
 
 		<div class="container">
 			<div class="starter-template">
-				<h3>Results:</h3>
-				<p class="lead">Below is the result of your query for:
-					<p class="lead"><b>Address</b>: {{ address }}</p>
-					<p class="lead"><b>Time</b>: {{ time }}</p>
-				</p>
+				<h3>Below is the result of your query for:</h3>
+				<h5><b>Address</b>: {{ address }}</h5>
+				<h5><b>Time</b>: {{ time }}</h5>
+				<h5><b>Distance</b>: {{ distance }} km</h5>
 			</div>
 			
 			<div id="map" style="width: 1120px; height: 600px; border: 0px"></div>
 
+			<!-- render map -->
 			<script>
 
 			 var linspace = function(start, stop, nsteps){
@@ -161,10 +203,6 @@
 
 			<script async defer
 					src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA&signed_in=true&callback=initMap"></script>
-			<!-- 
-				 
-				 <script async defer
-				 src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA&signed_in=true&callback=initMap"></script> -->
 
 			<!-- Bootstrap core JavaScript
 				 ================================================== -->
