@@ -53,16 +53,16 @@
 
 				<div class = "container">
 
-					<form  action="/map" method="GET">
+					<!-- <form  action="/map" method="GET"> -->
 						<div class="form-group">
 							<label for="query_tag">Your address:</label>
 							<input type="text" id="address" size="50" name='address'
+								   id="address"
 								   placeholder="260 Sheridan Ave, Palo Alto, CA 94306">
 
 							<label for="query_distance">within:</label>
 							<input type="text" id="distance" size="5" name='distance'
 								   placeholder="5"> miles.
-
 							
 							<label for="query_time">Time:</label>
 							<select class="input-small" id="time" name="time">
@@ -95,12 +95,13 @@
 						</div>
 						
 						<div>
-							<button type="submit" class="btn btn-default btn-lg">
+							<button type="submit" id="submit"
+									class="btn btn-default btn-lg">
 								Find dogs around your area!
 							</button>
 						</div>
 
-					</form>
+						<!-- </form> -->
 				</div>
 
 			</div>
@@ -110,11 +111,60 @@
 			<script src="static/js/bootstrap.min.js"></script>
 
 		</div> <!-- /.container-->
+
+		<!-- 		Geocoder -->
+		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA&signed_in=true"></script>
+		
+		<script>
+		 
+		 var geocoder = new google.maps.Geocoder();
+		 document.getElementById('submit').addEventListener('click', function() {
+			 geocodeAddress(geocoder);
+		 });
+
+		 function geocodeAddress(geocoder) {
+			 var address = document.getElementById('address').value;
+			 if (address == ''){
+				 address = '260 Sheridan Ave, Palo Alto, CA 94306';
+			 }
+			 
+			 var time = document.getElementById('time').value;
+			 
+			 geocoder.geocode({'address': address}, function(results, status) {
+				 if (status === google.maps.GeocoderStatus.OK) {
+					 latlon = [results[0].geometry.location.lat(),
+							   results[0].geometry.location.lng()]
+					 console.log(latlon);
+					 
+					 $.ajax({
+						 url: "/map",
+						 data: {lat: +latlon[0],
+								lon: +latlon[1],
+								address: address,
+								time: time},
+						 type: 'GET',
+						 success: function(response) {
+							 document.write(response);
+						 },
+						 error: function(error) {
+							 console.log(error);
+						 }
+					 });
+				 } else {
+					 alert('Geocode was not successful for the following reason: ' + status);
+				 }
+			 });
+		 }
+		 
+		 
+		</script>
+
 		
 		<!-- Bootstrap core JavaScript
 			 ================================================== -->
 		<!-- Placed at the end of the document so the pages load faster -->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-
+		
+		
 	</body>
 </html>

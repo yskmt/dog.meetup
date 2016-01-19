@@ -123,10 +123,15 @@ AND tags LIKE '%{tag}%';
    return render_template("output.html", photos=photos, the_result=the_result)
 
 
-@app.route('/map')
+@app.route('/map', methods=['GET'])
 def map_output():
    query_address = request.args.get('address')
    query_time = request.args.get('time')
+   query_latlon = float(request.args.get('lat')), float(request.args.get('lon'))
+   
+   print 'latlon = ', query_latlon
+   print 'time = ', query_time
+   print 'address = ', query_address
 
    if query_address == '':
        query_address = default_address
@@ -148,7 +153,7 @@ AND DATE_PART('hour', datetaken) = {hour};
 
    # convert latlon to xy coordinate in km
    xy = query_results[['latitude', 'longitude']]\
-        .apply(lambda x: latlon_to_dist(x, latlon), axis=1)
+        .apply(lambda x: latlon_to_dist(x, query_latlon), axis=1)
    xy = pd.DataFrame(xy, columns=['xy'])   
    for n, col in enumerate(['x', 'y']):
        xy[col] = xy['xy'].apply(lambda location: location[n])
@@ -179,4 +184,4 @@ AND DATE_PART('hour', datetaken) = {hour};
                           num_labels=len(set(query_results['label'])),
                           address=query_address,
                           time=query_time,
-                          center=latlon)
+                          center=query_latlon)
