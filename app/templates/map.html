@@ -125,10 +125,19 @@
 			<!-- render map -->
 			<script>
 
-			 var linspace = function(start, stop, nsteps){
-				 delta = (stop-start)/(nsteps-1)
-					 return d3.range(start, stop+delta, delta).slice(0, nsteps)
+			 function linspace(a,b,n) {
+				 if(typeof n === "undefined") n = Math.max(Math.round(b-a)+1,1);
+				 if(n<2) { return n===1?[a]:[]; }
+				 var i,ret = Array(n);
+				 n--;
+				 for(i=n;i>=0;i--) { ret[i] = (i*b+(n-i)*a)/n; }
+				 return ret;
 			 }
+			 /* 
+				var linspace = function(start, stop, nsteps){
+				delta = (stop-start)/(nsteps-1)
+				return d3.range(start, stop+delta, delta).slice(0, nsteps)
+				} */
 			 
 			 var map;
 			 var heatmap;
@@ -147,12 +156,13 @@
 					 center: myLatLng,
 					 scaleControl: true
 				 });
-				 
-				 heatmap = new google.maps.visualization.HeatmapLayer({
-					 data: getPoints(),
-					 map: map,
-					 radius: 15
-				 });
+
+			 	 /* 				 Heatmap */
+				 /* heatmap = new google.maps.visualization.HeatmapLayer({
+					data: getPoints(),
+					map: map,
+					radius: 15
+					}); */
 				 
 				 var dataset = {{ photos|tojson }};
 				 var num_labels = {{ num_labels }};
@@ -161,9 +171,11 @@
 				 var colors20 = d3.scale.category20().range();
 				 
 				 var pinColors = d3.scale.linear()
-								   .domain(linspace(0, num_labels, 20))
+								   .domain(linspace(0, num_labels-1, 20))
 								   .range(colors20);
-
+				 console.log(linspace(0, num_labels-1, 20));
+				 console.log(colors20);
+				 
 				 var infowindow = new google.maps.InfoWindow();
 
 				 /* plot clusters */
@@ -193,35 +205,36 @@
 
 					 heatpoints.push(new google.maps.LatLng(parseFloat(d["latitude"]),
 															parseFloat(d["longitude"])));
-					 /* 
-						var latlng = {lat: parseFloat(d["latitude"]),
-						lng: parseFloat(d["longitude"])};
-						
-						var circle = new google.maps.Marker({
-						position: latlng,
-						icon: {
-						path: google.maps.SymbolPath.CIRCLE,
-						fillOpacity: 0.5,
-						fillColor: pinColors(parseInt(d["label"])),
-						strokeOpacity: 1.0,
-						strokeColor: 'gray',
-						strokeWeight: 1.0, 
-						scale: 10
-						},
-						map: map
-						});
 
-						var contentstring = "<p>" + d["description"] + "<\p>"
-						+ "<p><div class=\"content\">"
-						+ d["tags"] + "</div><\p>"
-						+ "<img src=\""+ d["url_t"] + "\">"
-						+ "<p>" + d["datetaken"] + "</p>"
-						+ "<p>" + d["label"] + "</p>";
+					 var pc = pinColors(parseFloat(d["label"])/(num_labels)*20);
+					 var latlng = {lat: parseFloat(d["latitude"]),
+								   lng: parseFloat(d["longitude"])};
+					 
+					 var circle = new google.maps.Marker({
+						 position: latlng,
+						 icon: {
+							 path: google.maps.SymbolPath.CIRCLE,
+							 fillOpacity: 0.8,
+							 fillColor: pc,
+							 strokeOpacity: 1.0,
+							 strokeColor: 'gray',
+							 strokeWeight: 1.0, 
+							 scale: 10
+						 },
+						 map: map
+					 });
 
-						circle.addListener('click', function() {
-						infowindow.setContent(contentstring);
-						infowindow.open(map, circle);
-						}); */
+					 var contentstring = "<p>" + d["description"] + "<\p>"
+									   + "<p><div class=\"content\">"
+									   + d["tags"] + "</div><\p>"
+									   + "<img src=\""+ d["url_t"] + "\">"
+									   + "<p>" + d["datetaken"] + "</p>"
+									   + "<p>" + d["label"] + "</p>";
+
+					 circle.addListener('click', function() {
+						 infowindow.setContent(contentstring);
+						 infowindow.open(map, circle);
+					 });
 					 
 				 });
 
@@ -230,9 +243,6 @@
 					 map: map,
 					 title: 'center'
 				 });
-
-				 /* 				 Heatmap */
-				 console.log(getPoints());
 
 				 /* scroll after map is loaded */
 				 $("body, html").animate({ 

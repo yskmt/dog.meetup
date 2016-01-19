@@ -7,7 +7,9 @@ import psycopg2
 from flask import request
 
 import numpy as np
-from sklearn.cluster import DBSCAN
+from sklearn.cluster import DBSCAN, KMeans, AgglomerativeClustering
+from sklearn.metrics import silhouette_score
+
 from datetime import datetime
 
 from geopy.geocoders import Nominatim, GoogleV3 
@@ -82,23 +84,26 @@ def map_output():
 
     sbox = get_bbox(query_latlon, query_distance)
 
-    sql_query = """
-SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t 
-FROM photo_data_table
-WHERE latitude > {lat_min} AND latitude < {lat_max} 
-AND longitude > {lon_min} AND longitude < {lon_max}
-AND tags LIKE '%{tag}%'
-""".format(lat_min=sbox[1], lat_max=sbox[3],
-           lon_min=sbox[0], lon_max=sbox[2],
-           tag='dog')
-
 #     sql_query = """
 # SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t 
 # FROM photo_data_table
 # WHERE latitude > {lat_min} AND latitude < {lat_max} 
 # AND longitude > {lon_min} AND longitude < {lon_max}
+# AND tags LIKE '%{tag}%'
+# AND DATE_PART('hour', datetaken) = {hour};
 # """.format(lat_min=sbox[1], lat_max=sbox[3],
-#            lon_min=sbox[0], lon_max=sbox[2])
+#            lon_min=sbox[0], lon_max=sbox[2],
+#            tag='dog', hour=query_time)
+
+    sql_query = """
+SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t 
+FROM photo_data_table
+WHERE latitude > {lat_min} AND latitude < {lat_max} 
+AND longitude > {lon_min} AND longitude < {lon_max}
+AND tags LIKE '%{tag}%';
+""".format(lat_min=sbox[1], lat_max=sbox[3],
+           lon_min=sbox[0], lon_max=sbox[2],
+           tag='dog')
 
     query_results = pd.read_sql_query(sql_query, con)
 
@@ -111,9 +116,9 @@ AND tags LIKE '%{tag}%'
        
     # convert datetaken to hour taken
     # scale: 1.0 means that 1 hour corresponds to 1 km
-    # scale = 1.0
-    # hours = query_results['datetaken'].apply(lambda x: x.hour) * scale
-    # xyh = pd.concat([xy[['x', 'y']], hours], axis=1)
+    scale = 1.0
+    hours = query_results['datetaken'].apply(lambda x: x.hour+x.minute/60.0) * scale
+    xyh = pd.concat([xy[['x', 'y']], hours], axis=1)
 
     # no photos around the center
     if xy[['x','y']].shape[0] == 0:
@@ -126,10 +131,27 @@ AND tags LIKE '%{tag}%'
                                center=query_latlon)
     
     # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html
-    labels = DBSCAN(eps=0.05, metric='euclidean', min_samples=10,
+    labels = DBSCAN(eps=0.1, metric='euclidean', min_samples=5,
                     random_state=0)\
                     .fit_predict(xy[['x','y']])
+                    # .fit_predict(xyh)
 
+    # silave = []
+    # for nc in range(2, 40, 4):
+    #     print nc
+    #     labels = KMeans(n_clusters=nc,
+    #                     random_state=0)\
+    #                     .fit_predict(xy[['x','y']])
+
+    #     silave.append(silhouette_score(xy[['x','y']], labels))
+
+    # nc = range(2, 40, 4)[np.argmax(silave)]
+    # labels = KMeans(n_clusters=nc,
+    #                 random_state=0)\
+    #                 .fit_predict(xy[['x','y']])
+    
+    print len(set(labels))
+                    
     # add labels to dataframe
     query_results = pd.concat([query_results,
                                pd.DataFrame(labels, columns=['label'])],
