@@ -131,10 +131,11 @@ AND tags LIKE '%{tag}%';
                                center=query_latlon)
     
     # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html
-    labels = DBSCAN(eps=0.1, metric='euclidean', min_samples=5,
+    labels = DBSCAN(eps=0.3, metric='euclidean', min_samples=5,
                     random_state=0)\
-                    .fit_predict(xy[['x','y']])
-                    # .fit_predict(xyh)
+                    .fit_predict(xyh)
+    # .fit_predict(xy[['x','y']])
+                    
 
     # silave = []
     # for nc in range(2, 40, 4):
