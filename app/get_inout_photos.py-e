@@ -217,10 +217,10 @@ photo_inout = pd.read_sql_query(sql_query, con)
 
 # k-fold cross validation
 
-photo_tags = photo_inout.tags.drop_duplicates()
+photo_description = photo_inout.description.drop_duplicates()
 
-kf = KFold(n=photo_tags.shape[0], n_folds=8, shuffle=True, random_state=1)
-tf = tf_vectorizer.fit_transform(photo_inout.tags)
+kf = KFold(n=photo_description.shape[0], n_folds=8, shuffle=True, random_state=1)
+tf = tf_vectorizer.fit_transform(photo_inout.description)
 
 for train_index, test_index in kf:
 
@@ -243,7 +243,7 @@ for train_index, test_index in kf:
 
 
 # check out indoor/outoodr pictures
-pio = photo_inout.drop_duplicates('tags')
+pio = photo_inout.drop_duplicates('description')
 
 pio_out = pio[pio.context==2]
 
@@ -259,24 +259,27 @@ for url in pio_out.url_t[:20]:
 # test out
 
 sql_query = """
-SELECT * FROM photo_data_table ORDER BY random() LIMIT 100;
+SELECT * FROM photo_data_table WHERE tags LIKE '%dog%' ORDER BY random() LIMIT 100;
 """
 
 photos = pd.read_sql_query(sql_query,con)
 
-tf = tf_vectorizer.fit_transform(photo_inout.tags)
-tf_test = tf_vectorizer.transform(photos.tags)
+tf = tf_vectorizer.fit_transform(photo_inout.description)
+tf_test = tf_vectorizer.transform(photos.description)
+
+clf = LogisticRegression(C=1.0, penalty='l1', tol=1e-6)
+clf.fit(tf, photo_inout.context)
 preds = clf.predict(tf_test)
 
-
-
 for i in range(photos.shape[0]):
-    print i
 
-    # indoor
-    if preds[i]==2:
+    # indoor: 1, outdoor: 2
+    if preds[i]==1:
+        print i
         fd = urllib.urlopen(photos.iloc[i].url_t)
         image_file = io.BytesIO(fd.read())
         im = Image.open(image_file)
         im.show()
 
+for pt in photos.tags:
+    print pt

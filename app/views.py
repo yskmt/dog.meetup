@@ -96,7 +96,7 @@ def map_output():
 #            tag='dog', hour=query_time)
 
     sql_query = """
-SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t 
+SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t,url_m
 FROM photo_data_table
 WHERE latitude > {lat_min} AND latitude < {lat_max} 
 AND longitude > {lon_min} AND longitude < {lon_max}
@@ -110,6 +110,7 @@ AND tags LIKE '%{tag}%';
     # convert latlon to xy coordinate in km
     xy = query_results[['latitude', 'longitude']]\
          .apply(lambda x: latlon_to_dist(x, query_latlon), axis=1)
+         # .apply(lambda x: (x[0], x[1]), axis=1)
     xy = pd.DataFrame(xy, columns=['xy'])   
     for n, col in enumerate(['x', 'y']):
         xy[col] = xy['xy'].apply(lambda location: location[n])
@@ -131,9 +132,14 @@ AND tags LIKE '%{tag}%';
                                center=query_latlon)
     
     # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html
-    labels = DBSCAN(eps=0.3, metric='euclidean', min_samples=5,
+    labels = DBSCAN(eps=0.1, metric='euclidean', min_samples=10,
                     random_state=0)\
-                    .fit_predict(xyh)
+                    .fit_predict(xy[['x','y']])
+    # .fit_predict(xyh)
+    # labels = KMeans(n_clusters=20,
+    #                 random_state=0)\
+    
+    
     # .fit_predict(xy[['x','y']])
                     
 

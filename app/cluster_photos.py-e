@@ -1,5 +1,5 @@
 import numpy as np
-from numpy import cos, sin, arccos, arctan2
+from numpy import cos, sin, arccos, arctan2, sign
 
 import pandas as pd
 from sklearn.cluster import KMeans
@@ -44,19 +44,20 @@ def latlon_to_dist(latlon, center, R=6371.0):
     dlat = latlon[0] - center[0]
     a = sin(dlat/2)**2
     c = 2 * arctan2(np.sqrt(a), np.sqrt(1-a))
-    y = R*c
+    y = sign(dlat)*R*c
 
     # dlat = 0
     dlon = latlon[1] - center[1]
     a = cos(center[0])*cos(latlon[0])*sin(dlon/2)**2
     c = 2 * arctan2(np.sqrt(a), np.sqrt(1-a))
-    x = R*c
+    x = sign(dlon)*R*c
 
     # a = sin(dlat/2)**2 + cos(center[0])*cos(latlon[0])*(sin(dlon/2)**2)
     # c = 2 * arctan2(np.sqrt(a), np.sqrt(1-a))
     # d = R*c
 
     return x, y
+
 
 
 def get_bbox(center, radius=10.0, R=6371.0):
