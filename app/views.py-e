@@ -100,7 +100,6 @@ SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t,url_m
 FROM photo_data_table
 WHERE latitude > {lat_min} AND latitude < {lat_max} 
 AND longitude > {lon_min} AND longitude < {lon_max}
-AND tags LIKE '%{tag}%';
 """.format(lat_min=sbox[1], lat_max=sbox[3],
            lon_min=sbox[0], lon_max=sbox[2],
            tag='dog')
@@ -132,16 +131,11 @@ AND tags LIKE '%{tag}%';
                                center=query_latlon)
     
     # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html
-    labels = DBSCAN(eps=0.1, metric='euclidean', min_samples=10,
+    labels = DBSCAN(eps=0.3, metric='euclidean', min_samples=5,
                     random_state=0)\
-                    .fit_predict(xy[['x','y']])
-    # .fit_predict(xyh)
-    # labels = KMeans(n_clusters=20,
-    #                 random_state=0)\
-    
-    
-    # .fit_predict(xy[['x','y']])
-                    
+                    .fit_predict(xyh)
+
+                    # .fit_predict(xy[['x','y']])
 
     # silave = []
     # for nc in range(2, 40, 4):
@@ -156,22 +150,24 @@ AND tags LIKE '%{tag}%';
     # labels = KMeans(n_clusters=nc,
     #                 random_state=0)\
     #                 .fit_predict(xy[['x','y']])
-    
-    print len(set(labels))
-                    
+                        
     # add labels to dataframe
     query_results = pd.concat([query_results,
                                pd.DataFrame(labels, columns=['label'])],
                               axis=1)
 
-    # drop -1s
+    # drop -1 clusters
     query_results = query_results[query_results['label']!=-1]
 
     # return only for the specified hour
     hours = query_results['datetaken'].apply(lambda x: x.hour)
     query_results = query_results[hours==query_time]
 
-    # note the existence of -1 group
+    # drop 1-element cluster after sliced by an hour
+    idx_preserve = (query_results.groupby('label')['label'].count()!=1)
+    idx_preserve = idx_preserve[idx_preserve==True]
+    query_results = query_results[query_results.label.isin(idx_preserve.index)]
+            
     # gather cluster characteristics
     lb_unique, num_pics = np.unique(labels, return_counts=True)
     num_pics = dict(zip(lb_unique, num_pics))
@@ -181,6 +177,8 @@ AND tags LIKE '%{tag}%';
         
     # cov = np.sqrt(np.cov(query_results[['latitude','longitude']].T))
     # mean = np.mean(query_results[['latitude','longitude']].T, axis=1)
+
+    print '# clusters to show:', len(set(query_results['label']))
     
     return render_template("map.html",
                            photos=query_results.to_dict(orient='index'),
