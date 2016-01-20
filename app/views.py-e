@@ -16,6 +16,8 @@ from geopy.geocoders import Nominatim, GoogleV3
 
 from app.cluster_photos import latlon_to_dist, get_bbox
 
+from utils import get_ellipse_coords
+
 
 # user = 'Katie' #add your username here (same as previous postgreSQL)
 # host = 'localhost'
@@ -174,7 +176,34 @@ AND longitude > {lon_min} AND longitude < {lon_max}
     centroids = query_results.groupby('label').mean().transpose().to_dict()
     for key, value in centroids.iteritems():
         value['num_pics'] = np.sqrt(num_pics[key])
+
+    # get mean and covariance of the groups
+    covs = query_results.groupby('label')[['latitude','longitude']].cov()
+    means = query_results.groupby('label')[['latitude','longitude']].mean()
+    num_pics = query_results.groupby('label')[['label']].count()
+    num_pics.columns = ['num_pics']
+    
+    labels_multi = covs.index.get_level_values('label').unique()
+
+    cluster_shape = {}
+    pts_ellipse = {}
+    for lb in labels_multi:
+        eigs = np.linalg.eig(covs.loc[lb])
+        radii = list(eigs[0])
+        pvec = eigs[1][:,0]
+        pdir = [np.arctan(pvec[1]/pvec[0])]
+        # pdir = [np.arccos(np.dot(pvec, [1,0]))]
+        center = list(means.loc[lb])
+
+        # pts_ellipse[lb] = get_ellipse_coords(
+        #     radii[0], radii[1], center[1], center[0], pdir[0], 0.1)
         
+        cluster_shape[lb] = center + radii + pdir
+
+    cluster_shape = pd.DataFrame(
+        cluster_shape, index=['lat_c','lon_c','radii_x','radii_y','orientation'])
+
+    # cluster_shape = pd.concat([cluster_shape, num_pics.transpose()])    
     # cov = np.sqrt(np.cov(query_results[['latitude','longitude']].T))
     # mean = np.mean(query_results[['latitude','longitude']].T, axis=1)
 
@@ -188,5 +217,5 @@ AND longitude > {lon_min} AND longitude < {lon_max}
                            time=datetime.strptime(str(query_time), "%H").strftime("%-I %p"),
                            distance=query_distance,
                            clusters=centroids,
-                           
+                           cluster_shape=cluster_shape.to_dict(),
                            center=query_latlon)

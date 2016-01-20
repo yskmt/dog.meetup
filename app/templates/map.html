@@ -14,7 +14,11 @@
 		<link href="../static/css/bootstrap.min.css" rel="stylesheet">
 		<link href="../static/css/starter-template.css" rel="stylesheet">
 
-		<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>		
+		<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
+
+		<script src="{{ url_for('static', filename='js/eshapes.js') }}"></script>
+		
+		
 		<!-- <link rel="stylesheet" type="text/css" -->
 		<!-- 	  href="{{ url_for('static', filename='style.css') }}"> -->
 
@@ -143,6 +147,7 @@
 			 var heatmap;
 			 var heatpoints = [];
 			 var markers = [];
+			 var ellipses = [];
 			 var is_marker = 1; // 1: show marker, 0: show heatmap
 			 
 			 function initMap() {
@@ -167,9 +172,10 @@
 				 });
 				 
 				 var dataset = {{ photos|tojson }};
+				 var clusters = {{ cluster_shape|tojson }};
 				 var num_labels = {{ num_labels }};
 				 var max_label = {{ max_label }}
-				 var clusters = {{ clusters|tojson }};
+				 /* 				 var clusters = {{ clusters|tojson }}; */
 				 
 				 var colors20 = d3.scale.category20().range();
 
@@ -251,6 +257,22 @@
 					 
 				 });
 
+				 
+				 /* plot each clusters */
+				 jQuery.each(clusters, function(i, d) {
+
+					 xys = get_ellipse_coords(+d['radii_y']*1000,
+			 +d['radii_x']*1000,
+			 +d['lon_c'], +d['lat_c'], +d['orientation'], 10);
+
+					 xs = xys[0];
+					 ys = xys[1];
+
+					 ellipses.push(show_polygon(map, xs, ys));
+					 
+				 });
+
+
 				 var marker = new google.maps.Marker({
 					 position: myLatLng,
 					 map: map,
@@ -272,31 +294,50 @@
 			 }
 			 
 			 function toggleHeatmap() {
-				 heatmap.setMap(heatmap.getMap() ? null : map);
 
+				 /* 				 markers --> clusters */
 				 if (is_marker==1){
 					 clearMarkers();
-					 is_marker=0;
+					 showClusters();
+					 is_marker=2;
 				 }
-				 else{
+				 /* 				 heatmap --> markers */
+				 else if (is_marker==0){
+					 heatmap.setMap(null);
 					 showMarkers();
 					 is_marker=1;
+				 }
+				 /* 				 clusters --> heatmap */
+				 else{
+					 clearClusters();
+					 heatmap.setMap(map);
+					 is_marker = 0;
 				 }
 
 			 }
 
-			 function setMapOnAll(map) {
+			 function clearMarkers() {
+				 for (var i = 0; i < markers.length; i++) {
+					 markers[i].setMap(null);
+				 }
+			 }
+
+			 function showMarkers() {
 				 for (var i = 0; i < markers.length; i++) {
 					 markers[i].setMap(map);
 				 }
 			 }
 
-			 function clearMarkers() {
-				 setMapOnAll(null);
+			 function clearClusters() {
+				 for (var i = 0; i < ellipses.length; i++) {
+					 ellipses[i].setMap(null);
+				 }
 			 }
 
-			 function showMarkers() {
-				 setMapOnAll(map);
+			 function showClusters() {
+				 for (var i = 0; i < ellipses.length; i++) {
+					 ellipses[i].setMap(map);
+				 }
 			 }
 
 			 
