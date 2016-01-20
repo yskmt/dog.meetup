@@ -188,11 +188,11 @@ AND longitude > {lon_min} AND longitude < {lon_max}
     cluster_shape = {}
     pts_ellipse = {}
     for lb in labels_multi:
-        eigs = np.linalg.eig(covs.loc[lb])
+        eigs = np.linalg.eigh(covs.loc[lb])
         radii = list(eigs[0])
-        pvec = eigs[1][:,0]
-        pdir = [np.arctan(pvec[1]/pvec[0])]
-        # pdir = [np.arccos(np.dot(pvec, [1,0]))]
+        pvec = eigs[1][:,0]  # direction of the 1st eigenvector (lat, lng)
+        pvec = np.array([pvec[1], pvec[0]])  # switch to make it (lng, lat)
+        pdir = [np.arctan(pvec[1]/pvec[0])]  # get angle from x-axis (lng-direction)
         center = list(means.loc[lb])
 
         # pts_ellipse[lb] = get_ellipse_coords(
@@ -203,7 +203,7 @@ AND longitude > {lon_min} AND longitude < {lon_max}
     cluster_shape = pd.DataFrame(
         cluster_shape, index=['lat_c','lon_c','radii_x','radii_y','orientation'])
 
-    # cluster_shape = pd.concat([cluster_shape, num_pics.transpose()])    
+    cluster_shape = pd.concat([cluster_shape, num_pics.transpose()])    
     # cov = np.sqrt(np.cov(query_results[['latitude','longitude']].T))
     # mean = np.mean(query_results[['latitude','longitude']].T, axis=1)
 
@@ -214,7 +214,7 @@ AND longitude > {lon_min} AND longitude < {lon_max}
                            num_labels=len(set(query_results['label'])),
                            max_label=query_results['label'].max(),
                            address=query_address,
-                           time=datetime.strptime(str(query_time), "%H").strftime("%-I %p"),
+                           hour=datetime.strptime(str(query_time), "%H").strftime("%-I %p"),
                            distance=query_distance,
                            clusters=centroids,
                            cluster_shape=cluster_shape.to_dict(),

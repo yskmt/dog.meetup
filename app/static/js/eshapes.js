@@ -2,13 +2,13 @@ Math.radians = function(degrees) {
   return degrees * Math.PI / 180;
 };
 
-function get_ellipse_coords(a, b, x, y, angle, k=10){
+function get_ellipse_coords(a, b, x, y, angle, num_pics, k=10){
 
 	xs = [];
 	ys = [];
 
 	// beta = -angle*Math.PI/180.0;
-	beta = -angle;
+	beta = angle;
 	sin_beta = Math.sin(beta);
 	cos_beta = Math.cos(beta);
 	
@@ -22,11 +22,15 @@ function get_ellipse_coords(a, b, x, y, angle, k=10){
 		ys.push(y + (a * cos_alpha * sin_beta + b * sin_alpha * cos_beta));
 	}
 
-	return [xs, ys];
+	// calculate density (1e-6 is the minimum area)
+	var d = num_pics/(a*b)/1e6;
+	d = d>0.9 ? 0.9 : d;
+		
+	return [xs, ys, d];
 }
 
 
-function show_polygon(map, xs, ys){
+function show_polygon(map, xs, ys, cluster_info, density=0.5, color='#FF0000'){
 
 	// Define the LatLng coordinates for the polygon.
 	var triangleCoords = [];
@@ -38,18 +42,49 @@ function show_polygon(map, xs, ys){
 	// Construct the polygon.
 	var polygon = new google.maps.Polygon({
 		paths: triangleCoords,
-		strokeColor: '#FF0000',
-		strokeOpacity: 0.8,
-		strokeWeight: 3,
-		fillColor: '#FF0000',
-		fillOpacity: 0.35
+		strokeColor: color,
+		strokeOpacity: 1.0,
+		strokeWeight: 2,
+		fillColor: color,
+		fillOpacity: density
 	});
 	polygon.setMap(map);
+	
+	// Add a listener for the click event.
+	polygon.addListener('click', function (event){
+		showArrays(event, cluster_info);
+	});
+
+	info_window_cluster = new google.maps.InfoWindow;
 
 	return polygon;
 	
-	// Add a listener for the click event.
-	// bermudaTriangle.addListener('click', showArrays);
+}
 
-	// infoWindow = new google.maps.InfoWindow;
+
+function showArrays(event, cluster_info) {
+	// Since this polygon has only one path, we can call getPath() to return the
+	// MVCArray of LatLngs.
+
+	var contentString = '<b>Cluster</b><br>'
+		// + 'Clicked location: <br>' + event.latLng.lat() + ','
+		// + event.latLng.lng() + '<br>' 
+		+ '# of pictures at ' + cluster_info['hour']
+		+ ': ' + cluster_info['num_pics'];
+
+	// Replace the info window's content and position.
+	info_window_cluster.setContent(contentString);
+	info_window_cluster.setPosition(event.latLng);
+
+	info_window_cluster.open(map);
+}
+
+
+function linspace(a,b,n) {
+	if(typeof n === "undefined") n = Math.max(Math.round(b-a)+1,1);
+	if(n<2) { return n===1?[a]:[]; }
+	var i,ret = Array(n);
+	n--;
+	for(i=n;i>=0;i--) { ret[i] = (i*b+(n-i)*a)/n; }
+	return ret;
 }

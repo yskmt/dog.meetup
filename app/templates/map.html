@@ -22,6 +22,9 @@
 		<!-- <link rel="stylesheet" type="text/css" -->
 		<!-- 	  href="{{ url_for('static', filename='style.css') }}"> -->
 
+
+		<meta id="hour" data-name="{{ hour }}">
+		
 	</head>
 
 	<body>
@@ -115,40 +118,29 @@
 		</div> <!-- /.container-->
 
 		<div class="container">
-			<div class="starter-template">
+			<div class="starter-template" id="show_results">
 				<h3>Below is the result of your query for:</h3>
 				<h5><b>Address</b>: {{ address }}</h5>
-				<h5><b>Time</b>: {{ time }}</h5>
+				<h5><b>Time</b>: {{ hour }}</h5>
 				<h5><b>Distance</b>: {{ distance }} km</h5>
 			</div>
 
-			<button onclick="toggleHeatmap()">Toggle Markers/Heatmap</button>
+			<button id="toggleButton" onclick="toggleVisualizations()">
+				Toggle Markers/Clusters/Heatmap</button>
 
-			<div id="map" style="width: 1120px; height: 600px; border: 0px"></div>
+			<div id="map" style="width: 1120px; height: 550px; border: 0px"></div>
 
 			<!-- render map -->
 			<script>
-
-			 function linspace(a,b,n) {
-				 if(typeof n === "undefined") n = Math.max(Math.round(b-a)+1,1);
-				 if(n<2) { return n===1?[a]:[]; }
-				 var i,ret = Array(n);
-				 n--;
-				 for(i=n;i>=0;i--) { ret[i] = (i*b+(n-i)*a)/n; }
-				 return ret;
-			 }
-			 /* 
-				var linspace = function(start, stop, nsteps){
-				delta = (stop-start)/(nsteps-1)
-				return d3.range(start, stop+delta, delta).slice(0, nsteps)
-				} */
 			 
 			 var map;
 			 var heatmap;
 			 var heatpoints = [];
 			 var markers = [];
 			 var ellipses = [];
-			 var is_marker = 1; // 1: show marker, 0: show heatmap
+			 var is_marker = 1;
+			 var info_window_cluster;
+			 var hour = $('meta#hour').data()['name'];
 			 
 			 function initMap() {
 				 /* 
@@ -174,12 +166,11 @@
 				 var dataset = {{ photos|tojson }};
 				 var clusters = {{ cluster_shape|tojson }};
 				 var num_labels = {{ num_labels }};
-				 var max_label = {{ max_label }}
+				 var max_label = {{ max_label }};
 				 /* 				 var clusters = {{ clusters|tojson }}; */
 				 
 				 var colors20 = d3.scale.category20().range();
 
-				 console.log(max_label);
 				 if (max_label > 20){
 					 var pinColors = d3.scale.linear()
 									   .domain(linspace(0, max_label, 20))
@@ -260,15 +251,22 @@
 				 
 				 /* plot each clusters */
 				 jQuery.each(clusters, function(i, d) {
+					 var pc = pinColors(parseFloat(i));
 
-					 xys = get_ellipse_coords(+d['radii_y']*1000,
-			 +d['radii_x']*1000,
-			 +d['lon_c'], +d['lat_c'], +d['orientation'], 10);
+					 var radii_x = (+d['radii_x']<1e-6 ? 1e-6 : +d['radii_x'])*1000;
+					 var radii_y = (+d['radii_y']<1e-6 ? 1e-6 : +d['radii_y'])*1000;
+					 
+					 xys = get_ellipse_coords(radii_x, radii_y,
+			 +d['lon_c'], +d['lat_c'], +d['orientation'], +d['num_pics'], 10);
 
 					 xs = xys[0];
 					 ys = xys[1];
+					 den = xys[2];
 
-					 ellipses.push(show_polygon(map, xs, ys));
+					 ellipses.push(show_polygon(map, xs, ys,
+												{num_pics: +d['num_pics'],
+												hour: hour},
+												den, pc));
 					 
 				 });
 
@@ -281,7 +279,7 @@
 
 				 /* scroll after map is loaded */
 				 $("body, html").animate({ 
-					 scrollTop: $("div#map").offset().top
+					 scrollTop: $("button#toggleButton").offset().top
 				 }, 600);
 
 				 /* 				 heatmap is off in the beginning */
@@ -293,7 +291,7 @@
 				 return heatpoints;
 			 }
 			 
-			 function toggleHeatmap() {
+			 function toggleVisualizations() {
 
 				 /* 				 markers --> clusters */
 				 if (is_marker==1){
