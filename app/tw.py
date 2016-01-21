@@ -4,12 +4,11 @@ http://tweepy.readthedocs.org/en/v3.2.0/getting_started.html
 
 """
 import tweepy
+from authos import tw0, tw1, tw2, tw3
 
 
-auth = tweepy.OAuthHandler('',
-                           'XBGeGKz3OUKagxnr1kY3RwZhuHAN2NGCIPhV4Af9n9WT5RrVsb')
-auth.set_access_token('19383289-Db3ckcPlryj2hdIq6OHwYEcnbUysT5lGhcUE8uex3',
-                      'XIDuiVue0ENHTDXungMRi9Ss8G2nqVC1Yk2IS1bKFEU8h')
+auth = tweepy.OAuthHandler(tw0, tw1)
+auth.set_access_token(tw2, tw3)
 
 api = tweepy.API(auth)
 

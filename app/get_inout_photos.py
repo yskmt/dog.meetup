@@ -43,8 +43,11 @@ import seaborn as sb
 
 import numpy as np
 
-api_key = u'264d5eb00e8ca0a446d714cad1e4a99a'
-api_secret = u'79f9b05a9003ace7'
+from auths import fl0, fl1
+
+
+api_key = fl0
+api_secret = fl1
 
 flickr = flickrapi.FlickrAPI(api_key, api_secret, format='parsed-json')
 
