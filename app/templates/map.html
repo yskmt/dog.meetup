@@ -167,7 +167,6 @@
 				 var clusters = {{ cluster_shape|tojson }};
 				 var num_labels = {{ num_labels }};
 				 var max_label = {{ max_label }};
-				 var kde = {{ kde|tojson }};
 				 
 				 var colors20 = d3.scale.category20().range();
 
@@ -206,22 +205,17 @@
 
 					}); */
 
-
-				 /* plot kde results */
-				 jQuery.each(kde, function(i, d) {
-
+				 /* plot individual photos */
+				 jQuery.each(dataset, function(i, d) {
+					 
+					 /* kde scores */
 					 heatpoints.push({
 						 location: new google.maps.LatLng(
 							 parseFloat(d["latitude"]),
 							 parseFloat(d["longitude"])),
-						 weight: parseFloat(d["proba"])*1000}
+						 weight: parseFloat(d["kde_score"])}
 					 );
-				 });
-				 
-				 
-				 /* plot individual photos */
-				 jQuery.each(dataset, function(i, d) {
-
+					 
 					 /* heatpoints.push(new google.maps.LatLng(parseFloat(d["latitude"]),
 						parseFloat(d["longitude"]))); */
 
@@ -255,8 +249,16 @@
 									   + "<p>" + d["label"] + "</p>";
 
 					 circle.addListener('click', function() {
-						 infowindow.setContent(contentstring);
-						 infowindow.open(map, circle);
+
+						 $.getJSON('/_add_numbers', {
+							 a: $('input[name="a"]').val(),
+							 b: $('input[name="b"]').val()
+						 }, function(data) {
+							 console.log(data.result);
+							 infowindow.setContent(contentstring);
+							 infowindow.open(map, circle);
+						 });
+						 						 
 					 });
 					 
 				 });

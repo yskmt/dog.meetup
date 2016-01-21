@@ -1,4 +1,4 @@
-from flask import render_template
+from flask import render_template, jsonify
 from app import app
 from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists, create_database
@@ -52,6 +52,13 @@ def index():
 @app.route('/input')
 def cesareans_input():
     return render_template("input.html")
+
+@app.route('/_add_numbers')
+def add_numbers():
+    a = request.args.get('a', 0, type=int)
+    b = request.args.get('b', 0, type=int)
+    return jsonify(result=a + b)
+
 
 @app.route('/map', methods=['GET'])
 def map_output():
@@ -117,13 +124,18 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     xy = pd.DataFrame(xy, columns=['xy'])   
     for n, col in enumerate(['x', 'y']):
         xy[col] = xy['xy'].apply(lambda location: location[n])
-       
+
+    query_results['x'] = xy['x']
+    query_results['y'] = xy['y']
+        
     # convert datetaken to hour taken
     # scale: 1.0 means that 1 hour corresponds to 1 km
-    scale = 10.0
+    scale = 1.0
     hours = query_results['datetaken'].apply(lambda x: x.hour+x.minute/60.0) * scale
     xyh = pd.concat([xy[['x', 'y']], hours], axis=1)
 
+    query_results['hour'] = hours
+    
     # no photos around the center
     if xy[['x','y']].shape[0] == 0:
         return render_template("map.html",
@@ -139,57 +151,6 @@ AND longitude > {lon_min} AND longitude < {lon_max};
                     random_state=0)\
                     .fit_predict(xyh)
                     # .fit_predict(xy[['x','y']])
-
-    # kde = KernelDensity(bandwidth=0.01,
-    #                     kernel='exponential', algorithm='ball_tree')
-
-    
-    kde.fit(xyh)
-
-    resolution = 100
-    lats = np.linspace(query_results['latitude'].min(),
-                       query_results['latitude'].max(), resolution)
-    lons = np.linspace(query_results['longitude'].min(),
-                       query_results['longitude'].max(), resolution)
-    latsv, lonsv = np.meshgrid(lats, lons)
-    
-    samples = pd.DataFrame(np.array([latsv.flatten(),
-                                     lonsv.flatten(),
-                                     np.ones(resolution**2)*query_time]).T,
-                           columns=['latitude', 'longitude', 'hour'])
-    
-    xy_ = samples[['latitude', 'longitude']].apply(lambda x: latlon_to_dist(x, query_latlon), axis=1)
-
-    xy_ = pd.DataFrame(xy_, columns=['xy'])   
-    for n, col in enumerate(['x', 'y']):
-        xy_[col] = xy_['xy'].apply(lambda location: location[n])
-
-    samples = pd.concat([samples, xy_[['x', 'y']]], axis=1)
-    
-    kde_score = np.exp(kde.score_samples(samples[['x','y','hour']]))
-    kde_score /= np.max(kde_score)
-    print kde_score
-
-    nes = pd.concat([samples, pd.DataFrame(kde_score, columns=['proba'])], axis=1)
-    
-    # return only for the specified hour
-    hours = query_results['datetaken'].apply(lambda x: x.hour)
-    nes = nes[hours==query_time]
-
-    
-    # silave = []
-    # for nc in range(2, 40, 4):
-    #     print nc
-    #     labels = KMeans(n_clusters=nc,
-    #                     random_state=0)\
-    #                     .fit_predict(xy[['x','y']])
-
-    #     silave.append(silhouette_score(xy[['x','y']], labels))
-
-    # nc = range(2, 40, 4)[np.argmax(silave)]
-    # labels = KMeans(n_clusters=nc,
-    #                 random_state=0)\
-    #                 .fit_predict(xy[['x','y']])
                         
     # add labels to dataframe
     query_results = pd.concat([query_results,
@@ -199,6 +160,20 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     # drop -1 clusters
     query_results = query_results[query_results['label']!=-1]
 
+    # KDE
+    kde = KernelDensity(bandwidth=0.1,
+                        kernel='exponential', algorithm='ball_tree')
+    
+    kde.fit(query_results[['x','y','hour']])
+    
+    kde_score = np.exp(kde.score_samples(query_results[['x','y','hour']]))
+    print kde_score
+
+    query_results = pd.concat(
+        [query_results,
+         pd.DataFrame(kde_score, index=query_results.index,
+                      columns=['kde_score'])], axis=1)
+    
     # return only for the specified hour
     hours = query_results['datetaken'].apply(lambda x: x.hour)
     query_results = query_results[hours==query_time]
@@ -255,5 +230,4 @@ AND longitude > {lon_min} AND longitude < {lon_max};
                            distance=query_distance,
                            clusters=centroids,
                            cluster_shape=cluster_shape.to_dict(),
-                           kde=nes.to_dict(orient='index'),
                            center=query_latlon)
