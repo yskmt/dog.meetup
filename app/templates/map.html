@@ -167,7 +167,6 @@
 				 var clusters = {{ cluster_shape|tojson }};
 				 var num_labels = {{ num_labels }};
 				 var max_label = {{ max_label }};
-				 /* 				 var clusters = {{ clusters|tojson }}; */
 				 
 				 var colors20 = d3.scale.category20().range();
 
@@ -208,9 +207,17 @@
 
 				 /* plot individual photos */
 				 jQuery.each(dataset, function(i, d) {
-
-					 heatpoints.push(new google.maps.LatLng(parseFloat(d["latitude"]),
-															parseFloat(d["longitude"])));
+					 
+					 /* kde scores */
+					 heatpoints.push({
+						 location: new google.maps.LatLng(
+							 parseFloat(d["latitude"]),
+							 parseFloat(d["longitude"])),
+						 weight: parseFloat(d["kde_score"])}
+					 );
+					 
+					 /* heatpoints.push(new google.maps.LatLng(parseFloat(d["latitude"]),
+						parseFloat(d["longitude"]))); */
 
 					 var pc = pinColors(parseFloat(d["label"]));
 					 var latlng = {lat: parseFloat(d["latitude"]),
@@ -243,7 +250,7 @@
 
 					 circle.addListener('click', function() {
 						 infowindow.setContent(contentstring);
-						 infowindow.open(map, circle);
+						 infowindow.open(map, circle);						 						 
 					 });
 					 
 				 });
@@ -277,7 +284,8 @@
 
 					 ellipses.push(show_polygon(map, xs, ys,
 												{num_pics: +d['num_pics'],
-												hour: hour},
+												 hour: hour},
+												myLatLng,
 												den, pc));
 					 
 				 });

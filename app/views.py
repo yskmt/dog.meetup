@@ -1,4 +1,4 @@
-from flask import render_template
+from flask import render_template, jsonify, g
 from app import app
 from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists, create_database
@@ -8,7 +8,12 @@ from flask import request
 
 import numpy as np
 from sklearn.cluster import DBSCAN, KMeans, AgglomerativeClustering
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import silhouette_score
+from sklearn.neighbors import KernelDensity
+from sklearn.neighbors import KNeighborsRegressor
+
+from sklearn.externals import joblib
 
 from datetime import datetime
 
@@ -51,7 +56,28 @@ def index():
 def cesareans_input():
     return render_template("input.html")
 
-@app.route('/map', methods=['GET'])
+@app.route('/_add_numbers')
+def add_numbers():
+    lat = request.args.get('lat', 0, type=float)
+    lon = request.args.get('lon', 0, type=float)
+    lat_c = request.args.get('lat_c', 0, type=float)
+    lon_c = request.args.get('lon_c', 0, type=float)
+    
+    try:
+        kde = joblib.load('kde.pkl') 
+    except:
+        print 'kde does not exist!'
+        return None
+
+    xy = latlon_to_dist((lat,lon), (lat_c,lon_c))
+    
+    kde_score = np.exp(kde.score_samples(
+        np.array([np.ones(24)*xy[0], np.ones(24)*xy[1], np.arange(0,24)]).T))
+    
+    return jsonify(result=pd.DataFrame(kde_score).to_dict())
+
+
+@app.route('/map')
 def map_output():
     query_address = request.args.get('address')
     query_time = int(request.args.get('time'))
@@ -115,13 +141,18 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     xy = pd.DataFrame(xy, columns=['xy'])   
     for n, col in enumerate(['x', 'y']):
         xy[col] = xy['xy'].apply(lambda location: location[n])
-       
+
+    query_results['x'] = xy['x']
+    query_results['y'] = xy['y']
+        
     # convert datetaken to hour taken
     # scale: 1.0 means that 1 hour corresponds to 1 km
     scale = 1.0
     hours = query_results['datetaken'].apply(lambda x: x.hour+x.minute/60.0) * scale
     xyh = pd.concat([xy[['x', 'y']], hours], axis=1)
 
+    query_results['hour'] = hours
+    
     # no photos around the center
     if xy[['x','y']].shape[0] == 0:
         return render_template("map.html",
@@ -137,20 +168,6 @@ AND longitude > {lon_min} AND longitude < {lon_max};
                     random_state=0)\
                     .fit_predict(xyh)
                     # .fit_predict(xy[['x','y']])
-
-    # silave = []
-    # for nc in range(2, 40, 4):
-    #     print nc
-    #     labels = KMeans(n_clusters=nc,
-    #                     random_state=0)\
-    #                     .fit_predict(xy[['x','y']])
-
-    #     silave.append(silhouette_score(xy[['x','y']], labels))
-
-    # nc = range(2, 40, 4)[np.argmax(silave)]
-    # labels = KMeans(n_clusters=nc,
-    #                 random_state=0)\
-    #                 .fit_predict(xy[['x','y']])
                         
     # add labels to dataframe
     query_results = pd.concat([query_results,
@@ -160,6 +177,23 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     # drop -1 clusters
     query_results = query_results[query_results['label']!=-1]
 
+    # KDE
+    kde = KernelDensity(bandwidth=1.0,
+                        kernel='gaussian', algorithm='ball_tree')
+        
+    kde.fit(query_results[['x','y','hour']])
+    
+    kde_score = np.exp(kde.score_samples(query_results[['x','y','hour']]))
+    print kde_score
+
+    query_results = pd.concat(
+        [query_results,
+         pd.DataFrame(kde_score, index=query_results.index,
+                      columns=['kde_score'])], axis=1)
+
+    # save kde model
+    joblib.dump(kde, 'kde.pkl')
+    
     # return only for the specified hour
     hours = query_results['datetaken'].apply(lambda x: x.hour)
     query_results = query_results[hours==query_time]
