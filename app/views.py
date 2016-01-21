@@ -1,4 +1,4 @@
-from flask import render_template, jsonify
+from flask import render_template, jsonify, g
 from app import app
 from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists, create_database
@@ -11,6 +11,9 @@ from sklearn.cluster import DBSCAN, KMeans, AgglomerativeClustering
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import silhouette_score
 from sklearn.neighbors import KernelDensity
+from sklearn.neighbors import KNeighborsRegressor
+
+from sklearn.externals import joblib
 
 from datetime import datetime
 
@@ -55,12 +58,26 @@ def cesareans_input():
 
 @app.route('/_add_numbers')
 def add_numbers():
-    a = request.args.get('a', 0, type=int)
-    b = request.args.get('b', 0, type=int)
+    lat = request.args.get('lat', 0, type=float)
+    lon = request.args.get('lon', 0, type=float)
+
+    try:
+        kde = joblib.load('kde.pkl') 
+    except:
+        print 'kde does not exist!'
+        return None
+
+
+    kde_score = np.exp(kde.score_samples(np.array([np.ones(24)*lat, np.ones(24)*lon, np.arange(0,24)]).T))
+    
+    import pdb
+    pdb.set_trace()
+
+    
     return jsonify(result=a + b)
 
 
-@app.route('/map', methods=['GET'])
+@app.route('/map')
 def map_output():
     query_address = request.args.get('address')
     query_time = int(request.args.get('time'))
@@ -161,9 +178,9 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     query_results = query_results[query_results['label']!=-1]
 
     # KDE
-    kde = KernelDensity(bandwidth=0.1,
+    kde = KernelDensity(bandwidth=1.0,
                         kernel='exponential', algorithm='ball_tree')
-    
+        
     kde.fit(query_results[['x','y','hour']])
     
     kde_score = np.exp(kde.score_samples(query_results[['x','y','hour']]))
@@ -173,6 +190,9 @@ AND longitude > {lon_min} AND longitude < {lon_max};
         [query_results,
          pd.DataFrame(kde_score, index=query_results.index,
                       columns=['kde_score'])], axis=1)
+
+    # save kde model
+    joblib.dump(kde, 'kde.pkl')
     
     # return only for the specified hour
     hours = query_results['datetaken'].apply(lambda x: x.hour)

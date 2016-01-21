@@ -72,11 +72,22 @@ function showArrays(event, cluster_info) {
 		+ '# of pictures at ' + cluster_info['hour']
 		+ ': ' + cluster_info['num_pics'];
 
-	// Replace the info window's content and position.
-	info_window_cluster.setContent(contentString);
-	info_window_cluster.setPosition(event.latLng);
 
-	info_window_cluster.open(map);
+	// ajax request
+	$.getJSON('/_add_numbers', {
+		lat: event.latLng.lat(),
+		lon: event.latLng.lng()
+	}, function(data) {
+		console.log(data);
+		
+		// Replace the info window's content and position.
+		info_window_cluster.setContent(contentString);
+		info_window_cluster.setPosition(event.latLng);
+
+		info_window_cluster.open(map);
+	});
+
+
 }
 
 

@@ -249,16 +249,8 @@
 									   + "<p>" + d["label"] + "</p>";
 
 					 circle.addListener('click', function() {
-
-						 $.getJSON('/_add_numbers', {
-							 a: $('input[name="a"]').val(),
-							 b: $('input[name="b"]').val()
-						 }, function(data) {
-							 console.log(data.result);
-							 infowindow.setContent(contentstring);
-							 infowindow.open(map, circle);
-						 });
-						 						 
+						 infowindow.setContent(contentstring);
+						 infowindow.open(map, circle);						 						 
 					 });
 					 
 				 });
