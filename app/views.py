@@ -9,7 +9,6 @@ from flask import request
 import numpy as np
 from sklearn.cluster import DBSCAN, KMeans, AgglomerativeClustering
 from sklearn.metrics import silhouette_score
-from sklearn.neighbors import KernelDensity
 
 from datetime import datetime
 
