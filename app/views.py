@@ -73,6 +73,8 @@ def add_numbers():
     
     kde_score = np.exp(kde.score_samples(
         np.array([np.ones(24)*xy[0], np.ones(24)*xy[1], np.arange(0,24)]).T))
+    kde_score /= (np.max(kde_score)*0.2)
+    
     
     return jsonify(result=pd.DataFrame(kde_score).to_dict())
 
@@ -178,7 +180,7 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     query_results = query_results[query_results['label']!=-1]
 
     # KDE
-    kde = KernelDensity(bandwidth=1.0,
+    kde = KernelDensity(bandwidth=0.2,
                         kernel='gaussian', algorithm='ball_tree')
         
     kde.fit(query_results[['x','y','hour']])

@@ -15,6 +15,7 @@
 		<link href="../static/css/starter-template.css" rel="stylesheet">
 
 		<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
+		<script type="text/javascript" src="https://www.google.com/jsapi"></script>
 
 		<script src="{{ url_for('static', filename='js/eshapes.js') }}"></script>
 		
@@ -22,13 +23,13 @@
 		<!-- <link rel="stylesheet" type="text/css" -->
 		<!-- 	  href="{{ url_for('static', filename='style.css') }}"> -->
 
-
 		<meta id="hour" data-name="{{ hour }}">
 		
 	</head>
 
 	<body>
-
+    <div id="chart_div"></div>
+	
 		<nav class="navbar navbar-inverse navbar-fixed-top">
 			<div class="container">
 				<div class="navbar-header">
@@ -132,6 +133,7 @@
 
 			<!-- render map -->
 			<script>
+			 google.load('visualization', '1.0', {'packages':['corechart']});
 			 
 			 var map;
 			 var heatmap;
@@ -160,7 +162,7 @@
 				 heatmap = new google.maps.visualization.HeatmapLayer({
 					 data: getPoints(),
 					 map: map,
-					 radius: 15
+					 radius: 30
 				 });
 				 
 				 var dataset = {{ photos|tojson }};
@@ -255,6 +257,60 @@
 					 
 				 });
 
+				 /* heat map only			  */
+				 map.addListener('click', function(event) {
+					 if (is_marker != 0){
+						 return false;
+					 }
+					 
+					 /* ajax request */
+					 $.getJSON('/_add_numbers', {
+						 lat: event.latLng.lat(),
+						 lon: event.latLng.lng(),
+						 lat_c: myLatLng.lat,
+						 lon_c: myLatLng.lng
+					 }, function(data) {
+
+						 score = [];
+						 $.each(data.result[0], function(i,d){
+							 /* v: time of day, f: string */
+							 score.push([{v: [(+i), 0, 0], f: i}, d]);
+						 });
+
+						 var data = new google.visualization.DataTable();
+						 data.addColumn('timeofday', 'Time of Day');
+						 data.addColumn('number', 'Dog level');
+
+						 data.addRows(score);
+
+						 var options = {
+							 title: 'Dog Level Throughout the Day',
+							 hAxis: {
+								 title: 'Time of Day',
+								 format: 'h:mm a',
+								 viewWindow: {
+									 min: [0, 0, 0],
+									 max: [24, 5, 0]
+								 }
+							 },
+							 vAxis: {
+								 title: 'score (scale of 1-5)'
+							 }
+						 };
+
+						 var node        = document.createElement('div'),
+							 info_window = new google.maps.InfoWindow(),
+							 chart       = new google.visualization.ColumnChart(node);
+						 
+						 chart.draw(data, options);
+						 
+						 /* Replace the info window's content and position. */
+						 info_window.setContent(node);
+						 info_window.setPosition(event.latLng);
+						 info_window.open(map);
+					 });
+				 });
+
 				 /* calculate the minimum dlat and dlon for cluster radii */
 				 var R = 6371.0;
 				 var d_min_m = 0.5;
@@ -319,13 +375,13 @@
 					 showClusters();
 					 is_marker=2;
 				 }
-				 /* 				 heatmap --> markers */
+				 /* heatmap --> markers */
 				 else if (is_marker==0){
 					 heatmap.setMap(null);
 					 showMarkers();
 					 is_marker=1;
 				 }
-				 /* 				 clusters --> heatmap */
+				 /* clusters --> heatmap */
 				 else{
 					 clearClusters();
 					 heatmap.setMap(map);
@@ -358,7 +414,6 @@
 				 }
 			 }
 
-			 
 			</script>
 
 			<script async defer
@@ -368,6 +423,8 @@
 				 ================================================== -->
 			<!-- Placed at the end of the document so the pages load faster -->
 			<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-			
-	</body>
+
+			<div class="chart"></div>
+
+</body>
 </html>

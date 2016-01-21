@@ -1,3 +1,10 @@
+// Load the Visualization API and the piechart package.
+google.load('visualization', '1.0', {'packages':['corechart']});
+
+// Set a callback to run when the Google Visualization API is loaded.
+// google.setOnLoadCallback(drawChart);
+
+
 Math.radians = function(degrees) {
   return degrees * Math.PI / 180;
 };
@@ -72,6 +79,7 @@ function showArrays(event, cluster_info, myLatLng) {
 		// + event.latLng.lng() + '<br>' 
 		+ '# of pictures at ' + cluster_info['hour']
 		+ ': ' + cluster_info['num_pics'];
+		+'<div class="chart"></div>'; 
 
 
 	// ajax request
@@ -81,11 +89,46 @@ function showArrays(event, cluster_info, myLatLng) {
 		lat_c: myLatLng.lat,
 		lon_c: myLatLng.lng
 	}, function(data) {
-		console.log(data);
+
+		score = [];
+		$.each(data.result[0], function(i,d){
+			// v: time of day, f: string
+			score.push([{v: [(+i), 0, 0], f: i}, d]);
+			});
+
+		var data = new google.visualization.DataTable();
+		data.addColumn('timeofday', 'Time of Day');
+		data.addColumn('number', 'Dog level');
+
+		data.addRows(score);
+
+		var options = {
+			title: 'Dog Level Throughout the Day',
+			hAxis: {
+				title: 'Time of Day',
+				format: 'h:mm a',
+				viewWindow: {
+					min: [0, 0, 0],
+					max: [24, 5, 0]
+				}
+			},
+			vAxis: {
+				title: 'score (scale of 1-5)'
+			}
+		};
+
+        var node        = document.createElement('div'),
+            infoWindow  = info_window_cluster,
+            chart       = new google.visualization.ColumnChart(node);
+		
+		chart.draw(data, options);
 		
 		// Replace the info window's content and position.
-		info_window_cluster.setContent(contentString);
+		info_window_cluster.setContent(node);
 		info_window_cluster.setPosition(event.latLng);
+		
+		// info_window_cluster.setContent(contentString);
+		// info_window_cluster.setPosition(event.latLng);
 
 		info_window_cluster.open(map);
 	});
@@ -102,3 +145,4 @@ function linspace(a,b,n) {
 	for(i=n;i>=0;i--) { ret[i] = (i*b+(n-i)*a)/n; }
 	return ret;
 }
+
