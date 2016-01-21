@@ -248,14 +248,26 @@
 					 
 				 });
 
+				 /* calculate the minimum dlat and dlon for cluster radii */
+				 var R = 6371.0;
+				 var d_min_m = 0.5;
+
+				 var tan = Math.tan(d_min_m/2/R);
+				 var a_sq = tan/(1+tan);
+				 
+				 var dlat = 2*Math.asin(a_sq);
+				 var dlon = 2*Math.asin(a_sq/Math.cos(myLatLng.lat));
+
+				 dlat = dlat/2/Math.PI*180;
+				 dlon = dlon/2/Math.PI*180;
 				 
 				 /* plot each clusters */
 				 jQuery.each(clusters, function(i, d) {
 					 var pc = pinColors(parseFloat(i));
-
-					 var radii_x = (+d['radii_x']<1e-6 ? 1e-6 : +d['radii_x'])*1000;
-					 var radii_y = (+d['radii_y']<1e-6 ? 1e-6 : +d['radii_y'])*1000;
 					 
+					 var radii_x = (+d['radii_x']<dlon ? dlon : +d['radii_x']);
+					 var radii_y = (+d['radii_y']<dlat ? dlat : +d['radii_y']);
+
 					 xys = get_ellipse_coords(radii_x, radii_y,
 			 +d['lon_c'], +d['lat_c'], +d['orientation'], +d['num_pics'], 10);
 

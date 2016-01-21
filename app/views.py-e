@@ -101,7 +101,7 @@ def map_output():
 SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t,url_m
 FROM photo_data_table
 WHERE latitude > {lat_min} AND latitude < {lat_max} 
-AND longitude > {lon_min} AND longitude < {lon_max}
+AND longitude > {lon_min} AND longitude < {lon_max};
 """.format(lat_min=sbox[1], lat_max=sbox[3],
            lon_min=sbox[0], lon_max=sbox[2],
            tag='dog')
@@ -136,7 +136,6 @@ AND longitude > {lon_min} AND longitude < {lon_max}
     labels = DBSCAN(eps=0.3, metric='euclidean', min_samples=5,
                     random_state=0)\
                     .fit_predict(xyh)
-
                     # .fit_predict(xy[['x','y']])
 
     # silave = []
@@ -166,7 +165,8 @@ AND longitude > {lon_min} AND longitude < {lon_max}
     query_results = query_results[hours==query_time]
 
     # drop 1-element cluster after sliced by an hour
-    idx_preserve = (query_results.groupby('label')['label'].count()!=1)
+    min_cluster = 3
+    idx_preserve = (query_results.groupby('label')['label'].count()!=min_cluster)
     idx_preserve = idx_preserve[idx_preserve==True]
     query_results = query_results[query_results.label.isin(idx_preserve.index)]
             
@@ -186,17 +186,16 @@ AND longitude > {lon_min} AND longitude < {lon_max}
     labels_multi = covs.index.get_level_values('label').unique()
 
     cluster_shape = {}
-    pts_ellipse = {}
     for lb in labels_multi:
         eigs = np.linalg.eigh(covs.loc[lb])
-        radii = list(eigs[0])
+        radii = list(np.sqrt(eigs[0])*2)
         pvec = eigs[1][:,0]  # direction of the 1st eigenvector (lat, lng)
         pvec = np.array([pvec[1], pvec[0]])  # switch to make it (lng, lat)
         pdir = [np.arctan(pvec[1]/pvec[0])]  # get angle from x-axis (lng-direction)
         center = list(means.loc[lb])
 
-        # pts_ellipse[lb] = get_ellipse_coords(
-        #     radii[0], radii[1], center[1], center[0], pdir[0], 0.1)
+        # distance of the radii of 95% confident ellipse
+        # print latlon_to_dist(np.array(center)+np.array(radii), center)
         
         cluster_shape[lb] = center + radii + pdir
 
@@ -204,9 +203,8 @@ AND longitude > {lon_min} AND longitude < {lon_max}
         cluster_shape, index=['lat_c','lon_c','radii_x','radii_y','orientation'])
 
     cluster_shape = pd.concat([cluster_shape, num_pics.transpose()])    
-    # cov = np.sqrt(np.cov(query_results[['latitude','longitude']].T))
-    # mean = np.mean(query_results[['latitude','longitude']].T, axis=1)
 
+    
     print '# clusters to show:', len(set(query_results['label']))
     
     return render_template("map.html",

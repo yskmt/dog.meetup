@@ -58,8 +58,6 @@ def latlon_to_dist(latlon, center, R=6371.0):
 
     return x, y
 
-
-
 def get_bbox(center, radius=10.0, R=6371.0):
     """
     Get a bounding box (square) around center (lat, lng)
