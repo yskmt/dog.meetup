@@ -8,6 +8,7 @@ from flask import request
 
 import numpy as np
 from sklearn.cluster import DBSCAN, KMeans, AgglomerativeClustering
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import silhouette_score
 from sklearn.neighbors import KernelDensity
 
@@ -119,7 +120,7 @@ AND longitude > {lon_min} AND longitude < {lon_max};
        
     # convert datetaken to hour taken
     # scale: 1.0 means that 1 hour corresponds to 1 km
-    scale = 1.0
+    scale = 10.0
     hours = query_results['datetaken'].apply(lambda x: x.hour+x.minute/60.0) * scale
     xyh = pd.concat([xy[['x', 'y']], hours], axis=1)
 
@@ -139,6 +140,43 @@ AND longitude > {lon_min} AND longitude < {lon_max};
                     .fit_predict(xyh)
                     # .fit_predict(xy[['x','y']])
 
+    # kde = KernelDensity(bandwidth=0.01,
+    #                     kernel='exponential', algorithm='ball_tree')
+
+    
+    kde.fit(xyh)
+
+    resolution = 100
+    lats = np.linspace(query_results['latitude'].min(),
+                       query_results['latitude'].max(), resolution)
+    lons = np.linspace(query_results['longitude'].min(),
+                       query_results['longitude'].max(), resolution)
+    latsv, lonsv = np.meshgrid(lats, lons)
+    
+    samples = pd.DataFrame(np.array([latsv.flatten(),
+                                     lonsv.flatten(),
+                                     np.ones(resolution**2)*query_time]).T,
+                           columns=['latitude', 'longitude', 'hour'])
+    
+    xy_ = samples[['latitude', 'longitude']].apply(lambda x: latlon_to_dist(x, query_latlon), axis=1)
+
+    xy_ = pd.DataFrame(xy_, columns=['xy'])   
+    for n, col in enumerate(['x', 'y']):
+        xy_[col] = xy_['xy'].apply(lambda location: location[n])
+
+    samples = pd.concat([samples, xy_[['x', 'y']]], axis=1)
+    
+    kde_score = np.exp(kde.score_samples(samples[['x','y','hour']]))
+    kde_score /= np.max(kde_score)
+    print kde_score
+
+    nes = pd.concat([samples, pd.DataFrame(kde_score, columns=['proba'])], axis=1)
+    
+    # return only for the specified hour
+    hours = query_results['datetaken'].apply(lambda x: x.hour)
+    nes = nes[hours==query_time]
+
+    
     # silave = []
     # for nc in range(2, 40, 4):
     #     print nc
@@ -217,4 +255,5 @@ AND longitude > {lon_min} AND longitude < {lon_max};
                            distance=query_distance,
                            clusters=centroids,
                            cluster_shape=cluster_shape.to_dict(),
+                           kde=nes.to_dict(orient='index'),
                            center=query_latlon)
