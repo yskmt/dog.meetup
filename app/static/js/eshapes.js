@@ -30,7 +30,8 @@ function get_ellipse_coords(a, b, x, y, angle, num_pics, k=10){
 }
 
 
-function show_polygon(map, xs, ys, cluster_info, density=0.5, color='#FF0000'){
+function show_polygon(map, xs, ys, cluster_info, myLatLng,
+					  density=0.5, color='#FF0000'){
 
 	// Define the LatLng coordinates for the polygon.
 	var triangleCoords = [];
@@ -52,7 +53,7 @@ function show_polygon(map, xs, ys, cluster_info, density=0.5, color='#FF0000'){
 	
 	// Add a listener for the click event.
 	polygon.addListener('click', function (event){
-		showArrays(event, cluster_info);
+		showArrays(event, cluster_info, myLatLng);
 	});
 
 	info_window_cluster = new google.maps.InfoWindow;
@@ -62,7 +63,7 @@ function show_polygon(map, xs, ys, cluster_info, density=0.5, color='#FF0000'){
 }
 
 
-function showArrays(event, cluster_info) {
+function showArrays(event, cluster_info, myLatLng) {
 	// Since this polygon has only one path, we can call getPath() to return the
 	// MVCArray of LatLngs.
 
@@ -76,7 +77,9 @@ function showArrays(event, cluster_info) {
 	// ajax request
 	$.getJSON('/_add_numbers', {
 		lat: event.latLng.lat(),
-		lon: event.latLng.lng()
+		lon: event.latLng.lng(),
+		lat_c: myLatLng.lat,
+		lon_c: myLatLng.lng
 	}, function(data) {
 		console.log(data);
 		

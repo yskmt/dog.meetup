@@ -60,21 +60,21 @@ def cesareans_input():
 def add_numbers():
     lat = request.args.get('lat', 0, type=float)
     lon = request.args.get('lon', 0, type=float)
-
+    lat_c = request.args.get('lat_c', 0, type=float)
+    lon_c = request.args.get('lon_c', 0, type=float)
+    
     try:
         kde = joblib.load('kde.pkl') 
     except:
         print 'kde does not exist!'
         return None
 
-
-    kde_score = np.exp(kde.score_samples(np.array([np.ones(24)*lat, np.ones(24)*lon, np.arange(0,24)]).T))
+    xy = latlon_to_dist((lat,lon), (lat_c,lon_c))
     
-    import pdb
-    pdb.set_trace()
-
+    kde_score = np.exp(kde.score_samples(
+        np.array([np.ones(24)*xy[0], np.ones(24)*xy[1], np.arange(0,24)]).T))
     
-    return jsonify(result=a + b)
+    return jsonify(result=pd.DataFrame(kde_score).to_dict())
 
 
 @app.route('/map')
@@ -179,7 +179,7 @@ AND longitude > {lon_min} AND longitude < {lon_max};
 
     # KDE
     kde = KernelDensity(bandwidth=1.0,
-                        kernel='exponential', algorithm='ball_tree')
+                        kernel='gaussian', algorithm='ball_tree')
         
     kde.fit(query_results[['x','y','hour']])
     
