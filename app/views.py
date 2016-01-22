@@ -205,7 +205,7 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     query_results = query_results[hours==query_time]
 
     # drop 1-element cluster after sliced by an hour
-    min_cluster = 3
+    min_cluster = 5
     idx_preserve = (query_results.groupby('label')['label'].count()!=min_cluster)
     idx_preserve = idx_preserve[idx_preserve==True]
     query_results = query_results[query_results.label.isin(idx_preserve.index)]
@@ -253,6 +253,7 @@ AND longitude > {lon_min} AND longitude < {lon_max};
                            max_label=query_results['label'].max(),
                            address=query_address,
                            hour=datetime.strptime(str(query_time), "%H").strftime("%-I %p"),
+                           hour_24=datetime.strptime(str(query_time), "%H").strftime("%-H"),
                            distance=query_distance,
                            clusters=centroids,
                            cluster_shape=cluster_shape.to_dict(),

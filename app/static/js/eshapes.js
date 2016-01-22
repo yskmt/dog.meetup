@@ -4,12 +4,21 @@ google.load('visualization', '1.0', {'packages':['corechart']});
 // Set a callback to run when the Google Visualization API is loaded.
 // google.setOnLoadCallback(drawChart);
 
+function linspace(a,b,n) {
+	if(typeof n === "undefined") n = Math.max(Math.round(b-a)+1,1);
+	if(n<2) { return n===1?[a]:[]; }
+	var i,ret = Array(n);
+	n--;
+	for(i=n;i>=0;i--) { ret[i] = (i*b+(n-i)*a)/n; }
+	return ret;
+}
+
 
 Math.radians = function(degrees) {
   return degrees * Math.PI / 180;
 };
 
-function get_ellipse_coords(a, b, x, y, angle, num_pics, k=10){
+function get_ellipse_coords(a, b, x, y, angle, num_pics, k ){
 
 	xs = [];
 	ys = [];
@@ -38,7 +47,7 @@ function get_ellipse_coords(a, b, x, y, angle, num_pics, k=10){
 
 
 function show_polygon(map, xs, ys, cluster_info, myLatLng,
-					  density=0.5, color='#FF0000'){
+					  density, color){
 
 	// Define the LatLng coordinates for the polygon.
 	var triangleCoords = [];
@@ -56,7 +65,7 @@ function show_polygon(map, xs, ys, cluster_info, myLatLng,
 		fillColor: color,
 		fillOpacity: density
 	});
-	polygon.setMap(map);
+	polygon.setMap(null);
 	
 	// Add a listener for the click event.
 	polygon.addListener('click', function (event){
@@ -90,22 +99,26 @@ function showArrays(event, cluster_info, myLatLng) {
 		lon_c: myLatLng.lng
 	}, function(data) {
 
-		score = [];
+		score = [['timeofday', 'number', { role: 'style' }]];
 		$.each(data.result[0], function(i,d){
 			// v: time of day, f: string
-			score.push([{v: [(+i), 0, 0], f: i}, d]);
+			score.push([{v: [(+i), 0, 0], f: i}, d, 'gold']);
 			});
 
-		var data = new google.visualization.DataTable();
-		data.addColumn('timeofday', 'Time of Day');
-		data.addColumn('number', 'Dog level');
+		var data = google.visualization.arrayToDataTable(score);
+		// var data = new google.visualization.DataTable();
 
-		data.addRows(score);
+		console.log(data);
+		//<<< data.addColumn('timeofday', 'Time of Day');
+		// <<<data.addColumn('number', 'Dog level');
+		
+		// data.addRows();
+		// data.addRows(score);
 
 		var options = {
-			title: 'Dog Level Throughout the Day',
+			title: 'Dog Level Throughout a Day',
 			hAxis: {
-				title: 'Time of Day',
+				title: 'Time of a Day',
 				format: 'h:mm a',
 				viewWindow: {
 					min: [0, 0, 0],
@@ -113,7 +126,7 @@ function showArrays(event, cluster_info, myLatLng) {
 				}
 			},
 			vAxis: {
-				title: 'score (scale of 1-5)'
+				title: 'dog score'
 			}
 		};
 
@@ -137,12 +150,4 @@ function showArrays(event, cluster_info, myLatLng) {
 }
 
 
-function linspace(a,b,n) {
-	if(typeof n === "undefined") n = Math.max(Math.round(b-a)+1,1);
-	if(n<2) { return n===1?[a]:[]; }
-	var i,ret = Array(n);
-	n--;
-	for(i=n;i>=0;i--) { ret[i] = (i*b+(n-i)*a)/n; }
-	return ret;
-}
 

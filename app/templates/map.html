@@ -24,6 +24,7 @@
 		<!-- 	  href="{{ url_for('static', filename='style.css') }}"> -->
 
 		<meta id="hour" data-name="{{ hour }}">
+		<meta id="hour_24" data-name="{{ hour_24 }}">
 		<meta id="kde_score_max" data-name="{{ kde_score_max }}">
 		
 	</head>
@@ -127,10 +128,10 @@
 				<h5><b>Distance</b>: {{ distance }} km</h5>
 			</div>
 			
-			<div id="floating-panel">
-				<button id="toggleButton" onclick="toggleVisualizations()">
-					Toggle Markers/Clusters/Heatmap</button>
-			</div>
+			<!-- <div id="floating-panel">
+				 <button id="toggleButton" onclick="toggleVisualizations()">
+				 Toggle Markers/Clusters/Heatmap</button>
+				 </div> -->
 			
 			<div id="map" style="width: 1120px; height: 550px; border: 0px"></div>
 
@@ -143,10 +144,44 @@
 			 var heatpoints = [];
 			 var markers = [];
 			 var ellipses = [];
-			 var is_marker = 1;
+			 var is_marker = 0; /* 0: heatmap, 1: markers, 2: cluster */
 			 var info_window_cluster;
 			 var hour = $('meta#hour').data()['name'];
+			 var hour_24 = $('meta#hour_24').data()['name'];
 			 var kde_score_max = $('meta#kde_score_max').data()['name'];
+
+			 function CenterControl(controlDiv, map) {
+
+				 /* Set CSS for the control border. */
+				 var controlUI = document.createElement('div');
+				 controlUI.style.backgroundColor = '#fff';
+				 controlUI.style.border = '2px solid #fff';
+				 controlUI.style.borderRadius = '3px';
+				 controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
+				 controlUI.style.cursor = 'pointer';
+				 controlUI.style.marginBottom = '22px';
+				 controlUI.style.textAlign = 'center';
+				 controlUI.title = 'Click to recenter the map';
+				 controlDiv.appendChild(controlUI);
+
+				 /* Set CSS for the control interior. */
+				 var controlText = document.createElement('div');
+				 controlText.style.color = 'rgb(25,25,25)';
+				 controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+				 controlText.style.fontSize = '16px';
+				 controlText.style.lineHeight = '38px';
+				 controlText.style.paddingLeft = '5px';
+				 controlText.style.paddingRight = '5px';
+				 controlText.innerHTML = 'Toggle Markers/Clusters/Heatmap';
+				 controlUI.appendChild(controlText);
+
+				 /* Setup the click event listeners: simply set the
+				 map to Chicago. */
+				 controlUI.addEventListener('click', function() {
+					 toggleVisualizations();
+				 });
+				 
+			 }
 			 
 			 function initMap() {
 				 /* 
@@ -162,11 +197,23 @@
 					 scaleControl: true
 				 });
 
-			 	 /* 				 Heatmap */
+				 /* Create the DIV to hold the control and call the
+				 CenterControl() constructor */
+				 /* passing in this DIV. */
+				 var centerControlDiv = document.createElement('div');
+				 var centerControl = new CenterControl(centerControlDiv, map);
+
+				 centerControlDiv.index = 1;
+				 map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
+
+				 
+			 	 /* Heatmap */
 				 heatmap = new google.maps.visualization.HeatmapLayer({
 					 data: getPoints(),
 					 map: map,
-					 radius: 10
+					 radius: 30,
+					 dissipating: true,
+					 maxIntensity: 10
 				 });
 				 
 				 var dataset = {{ photos|tojson }};
@@ -211,7 +258,7 @@
 
 					}); */
 
-				 /* plot individual photos */
+				 /* plot individual markers/photos */
 				 jQuery.each(dataset, function(i, d) {
 					 
 					 /* kde scores */
@@ -240,7 +287,7 @@
 							 strokeWeight: 1.0, 
 							 scale: 10
 						 },
-						 map: map
+						 map: null
 					 });
 
 					 markers.push(circle);
@@ -279,19 +326,25 @@
 						 score = [];
 						 $.each(data.result[0], function(i,d){
 							 /* v: time of day, f: string */
-							 score.push([{v: [(+i), 0, 0], f: i}, d]);
+							 if (+i == +hour_24){
+								 score.push([{v: [(+i), 0, 0], f: i}, d, 'red']);
+							 }
+							 else{
+								 score.push([{v: [(+i), 0, 0], f: i}, d, 'color: #76A7FA']);
+							 }
 						 });
 
 						 var data = new google.visualization.DataTable();
-						 data.addColumn('timeofday', 'Time of Day');
+						 data.addColumn('timeofday', 'Time of a Day');
 						 data.addColumn('number', '');
-
+						 data.addColumn({ type: 'string', role: 'style' });
+						 
 						 data.addRows(score);
-
+						 
 						 var options = {
-							 title: 'Dog Level Throughout the Day',
+							 title: 'Dog Level Throughout a Day',
 							 hAxis: {
-								 title: 'Time of Day',
+								 title: 'Time of a Day',
 								 format: 'h:mm a',
 								 viewWindow: {
 									 min: [0, 0, 0],
@@ -299,7 +352,7 @@
 								 }
 							 },
 							 vAxis: {
-								 title: 'score (scale of 1-5)',
+								 title: 'score',
 								 minValue: 0,
 								 maxValue: 5
 							 },
@@ -361,13 +414,8 @@
 					 title: 'center'
 				 });
 
-				 /* scroll after map is loaded */
-				 $("body, html").animate({ 
-					 scrollTop: $("button#toggleButton").offset().top
-				 }, 600);
-
 				 /* 				 heatmap is off in the beginning */
-				 heatmap.setMap(null);
+				 heatmap.setMap(map);
 				 
 			 }
 			 
@@ -422,6 +470,15 @@
 				 }
 			 }
 
+
+			 /* scroll after map is loaded */
+			 /* $("document").ready(function(){
+				$("body, html").animate({ 
+				scrollTop: $("button#toggleButton").offset().top
+				}, 600);
+				}); */
+
+			 
 			</script>
 
 			<script async defer
