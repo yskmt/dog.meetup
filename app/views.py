@@ -74,7 +74,7 @@ def add_numbers():
     xy = latlon_to_dist((lat,lon), (lat_c,lon_c))
     
     kde_score = np.exp(kde.score_samples(
-        np.array([np.ones(24)*xy[0], np.ones(24)*xy[1], np.arange(0,24)]).T)[0])
+        np.array([np.ones(24)*xy[0], np.ones(24)*xy[1], np.arange(0,24)]).T))
     kde_score /= (kde_score_max*0.2)
     
     
@@ -162,10 +162,15 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     if xy[['x','y']].shape[0] == 0:
         return render_template("map.html",
                                photos=[{}],
-                               num_labels=1,
+                               num_labels=0,
+                               max_label=0,
                                address=query_address,
-                               time=query_time,
+                               hour=datetime.strptime(str(query_time), "%H").strftime("%-I %p"),
+                               hour_24=datetime.strptime(str(query_time), "%H").strftime("%-H"),
                                distance=query_distance,
+                               clusters=[{}],
+                               cluster_shape=[{}],
+                               kde_score_max=1,
                                center=query_latlon)
     
     # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html
@@ -192,20 +197,20 @@ AND longitude > {lon_min} AND longitude < {lon_max};
                                hour_24=datetime.strptime(str(query_time), "%H").strftime("%-H"),
                                distance=query_distance,
                                clusters=[{}],
-                               cluster_shape={},
+                               cluster_shape=[{}],
                                kde_score_max=1,
                                center=query_latlon)
 
         
-    # # KDE
-    # kde = KernelDensity(bandwidth=0.5,
-    #                     kernel='gaussian', algorithm='ball_tree')
+    # KDE
+    kde = KernelDensity(bandwidth=0.5,
+                        kernel='gaussian', algorithm='ball_tree')
 
-    kde = GMM(n_components=10, covariance_type='full')
+    # kde = GMM(n_components=10, covariance_type='full')
     
     kde.fit(query_results[['x','y','hour']])
 
-    kde_score = np.exp(kde.score_samples(query_results[['x','y','hour']])[0])
+    kde_score = np.exp(kde.score_samples(query_results[['x','y','hour']]))
     kde_score_max = np.mean(kde_score)
 
     query_results = pd.concat(
@@ -236,7 +241,7 @@ AND longitude > {lon_min} AND longitude < {lon_max};
                                hour_24=datetime.strptime(str(query_time), "%H").strftime("%-H"),
                                distance=query_distance,
                                clusters=[{}],
-                               cluster_shape={},
+                               cluster_shape=[{}],
                                kde_score_max=1,
                                center=query_latlon)
 
