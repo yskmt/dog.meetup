@@ -182,6 +182,21 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     # drop -1 clusters
     query_results = query_results[query_results['label']!=-1]
 
+    if query_results.size == 0:
+        return render_template("map.html",
+                               photos=[{}],
+                               num_labels=0,
+                               max_label=0,
+                               address=query_address,
+                               hour=datetime.strptime(str(query_time), "%H").strftime("%-I %p"),
+                               hour_24=datetime.strptime(str(query_time), "%H").strftime("%-H"),
+                               distance=query_distance,
+                               clusters=[{}],
+                               cluster_shape={},
+                               kde_score_max=1,
+                               center=query_latlon)
+
+        
     # # KDE
     # kde = KernelDensity(bandwidth=0.5,
     #                     kernel='gaussian', algorithm='ball_tree')
@@ -205,12 +220,27 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     hours = query_results['datetaken'].apply(lambda x: x.hour)
     query_results = query_results[hours==query_time]
 
-    # drop 1-element cluster after sliced by an hour
+    # drop small-element cluster after sliced by an hour
     min_cluster = 5
     idx_preserve = (query_results.groupby('label')['label'].count()!=min_cluster)
     idx_preserve = idx_preserve[idx_preserve==True]
     query_results = query_results[query_results.label.isin(idx_preserve.index)]
-            
+
+    if query_results.size == 0:
+        return render_template("map.html",
+                               photos=[{}],
+                               num_labels=0,
+                               max_label=0,
+                               address=query_address,
+                               hour=datetime.strptime(str(query_time), "%H").strftime("%-I %p"),
+                               hour_24=datetime.strptime(str(query_time), "%H").strftime("%-H"),
+                               distance=query_distance,
+                               clusters=[{}],
+                               cluster_shape={},
+                               kde_score_max=1,
+                               center=query_latlon)
+
+    
     # gather cluster characteristics
     lb_unique, num_pics = np.unique(labels, return_counts=True)
     num_pics = dict(zip(lb_unique, num_pics))
@@ -223,7 +253,7 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     means = query_results.groupby('label')[['latitude','longitude']].mean()
     num_pics = query_results.groupby('label')[['label']].count()
     num_pics.columns = ['num_pics']
-    
+
     labels_multi = covs.index.get_level_values('label').unique()
 
     cluster_shape = {}
