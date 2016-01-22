@@ -43,7 +43,7 @@ import seaborn as sb
 
 import numpy as np
 
-from autho fl0, fl1
+from auths import fl0, fl1
 
 api_key = fl0
 api_secret = fl1
@@ -91,7 +91,7 @@ def get_pics(year, bbox):
                                       text='dog',
                                       min_upload_date=str(utime_min),
                                       max_upload_date=str(utime_max),
-                                      extras='geo,tags,url_t,url_m,url_o,'\
+                                      extras='geo,tags,url_s,url_t,url_m,url_o,'\
                                       'description,owner_name,views,path_alias,'\
                                       'date_upload,date_taken,machine_tags',
                                       per_page='250', page=i)
@@ -169,7 +169,7 @@ if not database_exists(engine.url):
 print(database_exists(engine.url))
 
 # 2001 - 2016
-for yr in xrange(2000, 2010):
+for yr in xrange(2000, 2016):
     print 'year', yr
     dfs = get_pics(yr, bbox)
 
@@ -196,7 +196,28 @@ for yr in xrange(2000, 2010):
 # img = Image.open(file)
 
 
+###############################################################################
+# remove duplicaets
+con = None
+con = psycopg2.connect(database=dbname, user=username)
+cur = con.cursor()
 
+cur.execute("SELECT COUNT(DISTINCT id) FROM photo_inout_table;")
+print cur.fetchone()
+
+# remove duplicates
+cur.execute("CREATE TABLE phoit AS SELECT DISTINCT * FROM photo_inout_table;")
+cur.execute("DROP TABLE photo_inout_table;")
+cur.execute("ALTER TABLE phoit RENAME TO photo_inout_table;")
+
+cur.execute("SELECT COUNT(DISTINCT id) FROM photo_inout_table;")
+print cur.fetchone()
+
+con.commit()
+cur.close()
+con.close()
+
+###############################################################################
 # connect:
 con = None
 con = psycopg2.connect(database = dbname, user = username)
@@ -329,6 +350,27 @@ plt.plot(hour_counts, '-o')
 plt.show()
 
 
+
+# get photos with most views
+sql_query = """
+SELECT DISTINCT *
+FROM photo_data_table
+ORDER BY views;
+"""
+photo_popular = pd.read_sql_query(sql_query,con)
+
+num = 15**2
+
+popu = photo_popular.iloc[:num]['url_t']
+', '.join(map(lambda x: 'url(\''+x+'\')', popu.tolist()))
+', '.join(['no-repeat']*num)
+
+
+popu = photo_popular.iloc[:num]['url_s']
+
+for i in range(15):
+    for j in range(15):
+        print 'url('+ popu[i*10+j] +') ' + str(i*100) +'px '+ str(j*100) + 'px no-repeat,' 
 
 # clustering
 
