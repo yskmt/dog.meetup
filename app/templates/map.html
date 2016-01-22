@@ -24,6 +24,7 @@
 		<!-- 	  href="{{ url_for('static', filename='style.css') }}"> -->
 
 		<meta id="hour" data-name="{{ hour }}">
+		<meta id="kde_score_max" data-name="{{ kde_score_max }}">
 		
 	</head>
 
@@ -125,10 +126,12 @@
 				<h5><b>Time</b>: {{ hour }}</h5>
 				<h5><b>Distance</b>: {{ distance }} km</h5>
 			</div>
-
-			<button id="toggleButton" onclick="toggleVisualizations()">
-				Toggle Markers/Clusters/Heatmap</button>
-
+			
+			<div id="floating-panel">
+				<button id="toggleButton" onclick="toggleVisualizations()">
+					Toggle Markers/Clusters/Heatmap</button>
+			</div>
+			
 			<div id="map" style="width: 1120px; height: 550px; border: 0px"></div>
 
 			<!-- render map -->
@@ -143,6 +146,7 @@
 			 var is_marker = 1;
 			 var info_window_cluster;
 			 var hour = $('meta#hour').data()['name'];
+			 var kde_score_max = $('meta#kde_score_max').data()['name'];
 			 
 			 function initMap() {
 				 /* 
@@ -162,7 +166,7 @@
 				 heatmap = new google.maps.visualization.HeatmapLayer({
 					 data: getPoints(),
 					 map: map,
-					 radius: 30
+					 radius: 10
 				 });
 				 
 				 var dataset = {{ photos|tojson }};
@@ -268,7 +272,8 @@
 						 lat: event.latLng.lat(),
 						 lon: event.latLng.lng(),
 						 lat_c: myLatLng.lat,
-						 lon_c: myLatLng.lng
+						 lon_c: myLatLng.lng,
+						 kde_score_max: kde_score_max
 					 }, function(data) {
 
 						 score = [];
@@ -279,7 +284,7 @@
 
 						 var data = new google.visualization.DataTable();
 						 data.addColumn('timeofday', 'Time of Day');
-						 data.addColumn('number', 'Dog level');
+						 data.addColumn('number', '');
 
 						 data.addRows(score);
 
@@ -290,12 +295,15 @@
 								 format: 'h:mm a',
 								 viewWindow: {
 									 min: [0, 0, 0],
-									 max: [24, 5, 0]
+									 max: [24, 0, 0]
 								 }
 							 },
 							 vAxis: {
-								 title: 'score (scale of 1-5)'
-							 }
+								 title: 'score (scale of 1-5)',
+								 minValue: 0,
+								 maxValue: 5
+							 },
+							 legend: 'none'
 						 };
 
 						 var node        = document.createElement('div'),

@@ -12,6 +12,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import silhouette_score
 from sklearn.neighbors import KernelDensity
 from sklearn.neighbors import KNeighborsRegressor
+from sklearn.mixture import GMM
 
 from sklearn.externals import joblib
 
@@ -62,6 +63,7 @@ def add_numbers():
     lon = request.args.get('lon', 0, type=float)
     lat_c = request.args.get('lat_c', 0, type=float)
     lon_c = request.args.get('lon_c', 0, type=float)
+    kde_score_max = request.args.get('kde_score_max', 0, type=float)
     
     try:
         kde = joblib.load('kde.pkl') 
@@ -72,8 +74,8 @@ def add_numbers():
     xy = latlon_to_dist((lat,lon), (lat_c,lon_c))
     
     kde_score = np.exp(kde.score_samples(
-        np.array([np.ones(24)*xy[0], np.ones(24)*xy[1], np.arange(0,24)]).T))
-    kde_score /= (np.max(kde_score)*0.2)
+        np.array([np.ones(24)*xy[0], np.ones(24)*xy[1], np.arange(0,24)]).T)[0])
+    kde_score /= (kde_score_max*0.2)
     
     
     return jsonify(result=pd.DataFrame(kde_score).to_dict())
@@ -179,18 +181,20 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     # drop -1 clusters
     query_results = query_results[query_results['label']!=-1]
 
-    # KDE
-    kde = KernelDensity(bandwidth=0.2,
-                        kernel='gaussian', algorithm='ball_tree')
-        
-    kde.fit(query_results[['x','y','hour']])
+    # # KDE
+    # kde = KernelDensity(bandwidth=0.5,
+    #                     kernel='gaussian', algorithm='ball_tree')
+
+    kde = GMM(n_components=10, covariance_type='full')
     
-    kde_score = np.exp(kde.score_samples(query_results[['x','y','hour']]))
-    print kde_score
+    kde.fit(query_results[['x','y','hour']])
+
+    kde_score = np.exp(kde.score_samples(query_results[['x','y','hour']])[0])
+    kde_score_max = np.mean(kde_score)
 
     query_results = pd.concat(
         [query_results,
-         pd.DataFrame(kde_score, index=query_results.index,
+         pd.DataFrame(kde_score/(kde_score_max), index=query_results.index,
                       columns=['kde_score'])], axis=1)
 
     # save kde model
@@ -252,4 +256,5 @@ AND longitude > {lon_min} AND longitude < {lon_max};
                            distance=query_distance,
                            clusters=centroids,
                            cluster_shape=cluster_shape.to_dict(),
+                           kde_score_max=kde_score_max,
                            center=query_latlon)
