@@ -104,10 +104,11 @@ def map_output():
         try:
             geolocator = Nominatim()
             location = geolocator.geocode(query_address)
+            query_latlon = (location.latitude, location.longitude)
         except:
             geolocator = GoogleV3(api_key='AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA')
             location = geolocator.geocode(query_address)
-        query_latlon = (location.latitude, location.longitude)
+            query_latlon = (location.latitude, location.longitude)
             
     print 'latlon = ', query_latlon
     print 'time = ', query_time
