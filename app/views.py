@@ -48,11 +48,6 @@ con = psycopg2.connect(database = dbname, user = username)
 
 @app.route('/')
 @app.route('/index')
-def index():
-    return render_template("index.html",
-                           title = 'Home', user = { 'nickname': 'Miguel' },
-    )
-
 @app.route('/input')
 def cesareans_input():
     return render_template("input.html")

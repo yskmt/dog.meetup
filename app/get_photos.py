@@ -168,13 +168,13 @@ if not database_exists(engine.url):
     create_database(engine.url)
 print(database_exists(engine.url))
 
-# 2001 - 2016
-for yr in xrange(2000, 2016):
-    print 'year', yr
-    dfs = get_pics(yr, bbox)
+# # 2001 - 2016
+# for yr in xrange(2000, 2016):
+#     print 'year', yr
+#     dfs = get_pics(yr, bbox)
 
-    if len(dfs)>0:
-        dfs.to_sql('photo_data_table', engine, if_exists='append')
+#     if len(dfs)>0:
+#         dfs.to_sql('photo_data_table', engine, if_exists='append')
 
     
 # for photo_info in photos['photos']['photo']:
@@ -196,26 +196,26 @@ for yr in xrange(2000, 2016):
 # img = Image.open(file)
 
 
-###############################################################################
-# remove duplicaets
-con = None
-con = psycopg2.connect(database=dbname, user=username)
-cur = con.cursor()
+# ###############################################################################
+# # remove duplicaets
+# con = None
+# con = psycopg2.connect(database=dbname, user=username)
+# cur = con.cursor()
 
-cur.execute("SELECT COUNT(DISTINCT id) FROM photo_inout_table;")
-print cur.fetchone()
+# cur.execute("SELECT COUNT(DISTINCT id) FROM photo_inout_table;")
+# print cur.fetchone()
 
-# remove duplicates
-cur.execute("CREATE TABLE phoit AS SELECT DISTINCT * FROM photo_inout_table;")
-cur.execute("DROP TABLE photo_inout_table;")
-cur.execute("ALTER TABLE phoit RENAME TO photo_inout_table;")
+# # remove duplicates
+# cur.execute("CREATE TABLE phoit AS SELECT DISTINCT * FROM photo_inout_table;")
+# cur.execute("DROP TABLE photo_inout_table;")
+# cur.execute("ALTER TABLE phoit RENAME TO photo_inout_table;")
 
-cur.execute("SELECT COUNT(DISTINCT id) FROM photo_inout_table;")
-print cur.fetchone()
+# cur.execute("SELECT COUNT(DISTINCT id) FROM photo_inout_table;")
+# print cur.fetchone()
 
-con.commit()
-cur.close()
-con.close()
+# con.commit()
+# cur.close()
+# con.close()
 
 ###############################################################################
 # connect:
@@ -257,7 +257,6 @@ print query_results.shape
 # photo_data_from_sql = pd.read_sql_query(sql_query,con)
 # photo_data_from_sql.to_sql('photo_data_table', engine, if_exists='replace')
 
-
 hour_counts = []
 for i in range(24):
 
@@ -271,9 +270,8 @@ for i in range(24):
 
     hour_counts.append(photo_data_from_sql.shape[0])
 
-
 plt.figure(figsize=(5,5))
-plt.plot(hour_counts, '-o')
+plt.plot(hour_counts, '-o', linewidth=3)
 plt.tick_params(axis='both', which='major', labelsize=15)
 plt.xticks(np.arange(0,25,3),
            ['0AM', '3AM', '6AM', '9AM', '12PM', '3PM', '6PM', '9PM', '12AM'])
@@ -299,7 +297,7 @@ for i in range(7):
 photo_data_from_sql.set_index('id').to_csv('results.csv', encoding='utf-8')
 
 plt.figure(figsize=(5,5))
-plt.plot(dow_counts, '-o', c=sb.color_palette()[1])
+plt.plot(dow_counts, '-o', c=sb.color_palette()[1], linewidth=4)
 plt.xticks(range(7), ['sun', 'mon', 'tue', 'wed', 'thr', 'fri', 'sat'], fontsize=15)
 plt.tick_params(axis='both', which='major', labelsize=15)
 plt.savefig('dow.png')
@@ -327,12 +325,10 @@ for i in range(1, 31):
 plt.plot(day_counts, '-o')
 plt.show()
 
-# pd.concat(photo_data_from_sql).set_index('id').to_csv('results.csv', encoding='utf-8')
-
 
 hour_counts = []
-for i in range(24):
-    for j in range(7):
+for j in range(7):
+    for i in range(24):
     
         sql_query = """
         SELECT DISTINCT id,latitude,longitude,description,tags,url_t 
@@ -345,47 +341,70 @@ for i in range(24):
 
         hour_counts.append(photo_data_from_sql.shape[0])
 
+plt.figure(figsize=(5,5))
+plt.plot(hour_counts, '-o', linewidth=2, c=sb.color_palette()[0])
+plt.xticks(np.arange(12,24*7+12,24),
+           ['Sun', 'Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat'],fontsize=15)
+plt.xlim([0, 24*7])
+plt.tight_layout()
+plt.savefig('dow-hour.png')
+plt.show()
 
-plt.plot(hour_counts, '-o')
+month_counts = []
+for i in range(1,13):
+
+    sql_query = """
+    SELECT DISTINCT id,latitude,longitude,description,tags,url_t 
+    FROM photo_data_table
+    WHERE DATE_PART('month', datetaken) = {month} 
+    """.format(month=i)
+    photo_data_from_sql = pd.read_sql_query(sql_query,con)
+    print 'month: ', i, photo_data_from_sql.shape[0], 'hits'
+
+    month_counts.append(photo_data_from_sql.shape[0])
+
+plt.plot(range(1,13), month_counts, '-o')
 plt.show()
 
 
-
-# get photos with most views
-sql_query = """
-SELECT DISTINCT *
-FROM photo_data_table
-ORDER BY views;
-"""
-photo_popular = pd.read_sql_query(sql_query,con)
-
-num = 15**2
-
-popu = photo_popular.iloc[:num]['url_t']
-', '.join(map(lambda x: 'url(\''+x+'\')', popu.tolist()))
-', '.join(['no-repeat']*num)
-
-
-popu = photo_popular.iloc[:num]['url_s']
-
-for i in range(15):
-    for j in range(15):
-        print 'url('+ popu[i*10+j] +') ' + str(i*100) +'px '+ str(j*100) + 'px no-repeat,' 
-
-# clustering
-
+# # Generate a background image for the title page (just list of addresses)
+# # get photos with most views
 # sql_query = """
 # SELECT DISTINCT *
-# FROM photo_data_table;
+# FROM photo_data_table
+# ORDER BY views;
 # """
-# photo_data_from_sql = pd.read_sql_query(sql_query, con)
-# print photo_data_from_sql.shape[0], 'hits'
-# photo_data_from_sql.set_index('id', inplace=True)
+# photo_popular = pd.read_sql_query(sql_query,con)
+
+# num = 15**2
+
+# popu = photo_popular.iloc[:num]['url_t']
+# ', '.join(map(lambda x: 'url(\''+x+'\')', popu.tolist()))
+# ', '.join(['no-repeat']*num)
 
 
-# from sklearn.cluster import KMeans
+# popu = photo_popular.iloc[:num]['url_s']
 
-# y_pred = KMeans(n_clusters=20, random_state=0).fit_predict(photo_data_from_sql[['latitude', 'longitude']])
+# for i in range(15):
+#     for j in range(15):
+#         print 'url('+ popu[i*10+j] +') ' + str(i*100) +'px '+ str(j*100) + 'px no-repeat,' 
 
-# photo_data_from_sql['label'] = y_pred
-# photo_data_from_sql.to_csv('results_labeled.csv', encoding='utf-8')
+
+import Image
+
+#opens an image:
+im = Image.open("1_tree.jpg")
+#creates a new empty image, RGB mode, and size 400 by 400.
+new_im = Image.new('RGB', (400,400))
+
+#Here I resize my opened image, so it is no bigger than 100,100
+im.thumbnail((100,100))
+#Iterate through a 4 by 4 grid with 100 spacing, to place my image
+for i in xrange(0,500,100):
+    for j in xrange(0,500,100):
+        #I change brightness of the images, just to emphasise they are unique copies.
+        im=Image.eval(im,lambda x: x+(i+j)/30)
+        #paste the image at location i,j:
+        new_im.paste(im, (i,j))
+
+new_im.show()
