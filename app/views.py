@@ -208,6 +208,52 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     kde_score = np.exp(kde.score_samples(query_results[['x','y','hour']]))
     kde_score_max = np.mean(kde_score)
 
+    n_grid = 20
+    
+    latlon_min = query_results[['longitude','latitude']].min()
+    latlon_max = query_results[['longitude','latitude']].max()
+    lats = np.linspace(latlon_min['latitude'], latlon_max['latitude'], n_grid)
+    lons = np.linspace(latlon_min['longitude'], latlon_max['longitude'], n_grid)
+    lats, lons = np.meshgrid(lats, lons)
+    lats = lats.flatten()
+    lons = lons.flatten()
+
+    xy_min = query_results[['x','y']].min()
+    xy_max = query_results[['x','y']].max()
+    ys = np.linspace(xy_min['y'], xy_max['y'], n_grid)
+    xs = np.linspace(xy_min['x'], xy_max['x'], n_grid)
+    ys, xs = np.meshgrid(ys, xs)
+    ys = ys.flatten()
+    xs = xs.flatten()
+
+    heatpoints = np.array([])
+    hours = np.array([])
+    for h in range(24):
+        heatpoints = np.hstack(
+            [heatpoints,
+             np.exp(kde.score_samples(np.array([xs, ys, [0]*len(xs)]).T))])
+        hours = np.hstack([hours, np.array([h]*len(xs))])
+        
+    heatpoints = pd.DataFrame(
+        [np.repeat(lats, 24), np.repeat(lons, 24), heatpoints, hours],
+                              index=['latitude', 'longitude', 'kde_score', 'hour'])
+
+    import pdb
+    pdb.set_trace()
+
+    import matplotlib.pyplot as plt
+    
+    np.log(heatpoints.loc['kde_score']).hist(bins=100)
+    plt.savefig('h1.png')
+    plt.close()
+    
+    (heatpoints.loc['kde_score']).hist(bins=100)
+    plt.savefig('h2.png')
+    plt.close()
+    
+    
+    kde_score_max = np.max(heatpoints.loc['kde_score'])
+    
     query_results = pd.concat(
         [query_results,
          pd.DataFrame(kde_score/(kde_score_max), index=query_results.index,
@@ -277,9 +323,13 @@ AND longitude > {lon_min} AND longitude < {lon_max};
 
     
     print '# clusters to show:', len(set(query_results['label']))
+
+    import pdb
+    pdb.set_trace()
     
     return render_template("map.html",
                            photos=query_results.to_dict(orient='index'),
+                           heatpoints=heatpoints.to_dict(),
                            num_labels=len(set(query_results['label'])),
                            max_label=query_results['label'].max(),
                            address=query_address,

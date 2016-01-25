@@ -166,12 +166,26 @@
 
 			 var myLatLng = {lat:{{ center[0] }},
 							 lng:{{ center[1] }}}
+
+
+			 /* Create an array of styles. */
+			 /* http://googlemaps.github.io/js-samples/styledmaps/wizard/index.html */
+			 var styles = [ { "featureType": "road", "elementType": "geometry.stroke", "stylers": [ { "invert_lightness": true }, { "visibility": "on" }, { "color": "#d88080" }, { "weight": 0.1 } ] } ];
+			 var styledMap = new google.maps.StyledMapType(styles,
+														   {name: "Styled Map"});
 			 
 			 map = new google.maps.Map(document.getElementById('map'), {
 				 zoom: 13,
 				 center: myLatLng,
-				 scaleControl: true
+				 scaleControl: true,
+				 mapTypeControlOptions: {
+					 mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'map_style']
+				 }
+
 			 });
+
+			 map.mapTypes.set('map_style', styledMap);
+			 map.setMapTypeId('map_style');
 
 			 /* Create the DIV to hold the control and call the
 				CenterControl() constructor */
@@ -193,6 +207,7 @@
 			 });
 			 
 			 var dataset = {{ photos|tojson }};
+			 var kde_data = {{ heatpoints|tojson }};
 			 var clusters = {{ cluster_shape|tojson }};
 			 var num_labels = {{ num_labels }};
 			 var max_label = {{ max_label }};
@@ -212,16 +227,29 @@
 			 
 			 var infowindow = new google.maps.InfoWindow();
 
+
 			 /* plot individual markers/photos */
-			 jQuery.each(dataset, function(i, d) {
+			 jQuery.each(kde_data, function(i, d) {
 				 
-				 /* kde scores */
+				 /* 				 kde scores */
 				 heatpoints.push({
 					 location: new google.maps.LatLng(
 						 parseFloat(d["latitude"]),
 						 parseFloat(d["longitude"])),
 					 weight: parseFloat(d["kde_score"])}
 				 );
+			 }
+
+			 /* plot individual markers/photos */
+			 jQuery.each(dataset, function(i, d) {
+				 
+				 /* 				 kde scores */
+				 /* heatpoints.push({
+					location: new google.maps.LatLng(
+					parseFloat(d["latitude"]),
+					parseFloat(d["longitude"])),
+					weight: parseFloat(d["kde_score"])}
+					); */
 				 
 				 /* heatpoints.push(new google.maps.LatLng(parseFloat(d["latitude"]),
 					parseFloat(d["longitude"]))); */
