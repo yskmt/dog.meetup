@@ -70,6 +70,7 @@ def add_numbers():
 
     kde_score /= (kde_score_max/5.0)
     kde_score[kde_score>5.0] = 5.0
+    kde_score = np.around(kde_score, 1)
     
     return jsonify(result=pd.DataFrame(kde_score).to_dict())
 
@@ -125,11 +126,9 @@ def map_output():
 SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t,url_m
 FROM photo_data_table
 WHERE latitude > {lat_min} AND latitude < {lat_max} 
-AND longitude > {lon_min} AND longitude < {lon_max}
-AND (tags LIKE '%dog%' OR description LIKE '%dog%');
+AND longitude > {lon_min} AND longitude < {lon_max};
 """.format(lat_min=sbox[1], lat_max=sbox[3],
-           lon_min=sbox[0], lon_max=sbox[2],
-           tag='dog')
+           lon_min=sbox[0], lon_max=sbox[2])
 
     query_results = pd.read_sql_query(sql_query, con)
 
@@ -165,6 +164,7 @@ AND (tags LIKE '%dog%' OR description LIKE '%dog%');
                                clusters=[{}],
                                cluster_shape=[{}],
                                kde_score_max=1,
+                               top3=[{}],
                                center=query_latlon)
     
     # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html
@@ -193,6 +193,7 @@ AND (tags LIKE '%dog%' OR description LIKE '%dog%');
                                clusters=[{}],
                                cluster_shape=[{}],
                                kde_score_max=1,
+                               top3=[{}],
                                center=query_latlon)
 
         
@@ -205,7 +206,7 @@ AND (tags LIKE '%dog%' OR description LIKE '%dog%');
 
     kde_score = np.exp(kde.score_samples(query_results[['x','y','hour']]))
 
-    kde_score_max = np.sort(kde_score)[::-1][len(kde_score)/10]
+    kde_score_max = np.sort(kde_score)[::-1][len(kde_score)/5]
     kde_score /= (kde_score_max/5.0)
     kde_score[kde_score>5.0] = 5.0
     
@@ -227,14 +228,13 @@ AND (tags LIKE '%dog%' OR description LIKE '%dog%');
     query_results = query_results[hours==query_time]
 
     # drop small-element cluster after sliced by an hour
-    min_cluster = 5
+    min_cluster = 0
     idx_preserve = (query_results.groupby('label')['label'].count()>min_cluster)
     idx_preserve = idx_preserve[idx_preserve==True]
     query_results = query_results[query_results.label.isin(idx_preserve.index)]
 
     # re-calucalte the kde score exactly at the querried hour
     qu_re = query_results[['x','y','hour']]    
-    kde.score_samples(query_results[['x','y','hour']])
     qu_re['hour'] = qu_re['hour'].apply(np.floor)
     kde_score_2 = np.exp(kde.score_samples(qu_re))
 
