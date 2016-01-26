@@ -25,13 +25,6 @@ from app.cluster_photos import latlon_to_dist, get_bbox
 from utils import get_ellipse_coords
 
 
-# user = 'Katie' #add your username here (same as previous postgreSQL)
-# host = 'localhost'
-# dbname = 'birth_db'
-# db = create_engine('postgres://%s%s/%s'%(user,host,dbname))
-# con = None
-# con = psycopg2.connect(database = dbname, user = user)
-
 default_address = '260 Sheridan Ave, Palo Alto, CA 94306'
 
 username = 'ysakamoto'
@@ -45,6 +38,10 @@ print engine.url
 # connect:
 con = None
 con = psycopg2.connect(database = dbname, user = username)
+
+def get_stars(score):
+    return score/0.001 if score>0.001 else 0.0
+
 
 @app.route('/')
 @app.route('/index')
@@ -200,13 +197,12 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     # KDE
     kde = KernelDensity(bandwidth=0.5,
                         kernel='gaussian', algorithm='ball_tree')
-
     # kde = GMM(n_components=10, covariance_type='full')
     
     kde.fit(query_results[['x','y','hour']])
 
     kde_score = np.exp(kde.score_samples(query_results[['x','y','hour']]))
-    kde_score_max = np.mean(kde_score)
+    kde_score_max = np.max(kde_score)
 
     n_grid = 20
     
@@ -256,8 +252,13 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     
     query_results = pd.concat(
         [query_results,
-         pd.DataFrame(kde_score/(kde_score_max), index=query_results.index,
+         pd.DataFrame(kde_score/(kde_score_max)/0.2, index=query_results.index,
                       columns=['kde_score'])], axis=1)
+    
+    # import matplotlib.pyplot as plt    
+    # query_results['kde_score'].hist(bins=100)
+    # plt.savefig('h1.png')
+    # plt.close()
 
     # save kde model
     joblib.dump(kde, 'kde.pkl')
@@ -271,7 +272,29 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     idx_preserve = (query_results.groupby('label')['label'].count()!=min_cluster)
     idx_preserve = idx_preserve[idx_preserve==True]
     query_results = query_results[query_results.label.isin(idx_preserve.index)]
+    
 
+    label_groups = query_results[['kde_score', 'label']].groupby('label')
+    
+    max_score_label = label_groups.max()
+    max_idx_label = label_groups.idxmax()
+
+    # descending order
+    idx_sorted = np.array(np.argsort(max_score_label['kde_score']))[::-1]
+
+    # take top 3 clusters
+    cluster_top3 = max_score_label.iloc[idx_sorted][:3]
+    id_repr = max_idx_label.iloc[idx_sorted][:3]
+
+    # taking centroid
+    cluster_centers = query_results.groupby('label')[['latitude','longitude']].mean().loc[cluster_top3.index]
+
+    # taking max
+    cluster_centers = query_results.loc[np.array(id_repr.kde_score)][['latitude','longitude']]
+    cluster_centers.index = id_repr.index
+    
+    cluster_top3 = pd.concat([cluster_top3, cluster_centers], axis=1)
+    
     if query_results.size == 0:
         return render_template("map.html",
                                photos=[{}],
@@ -339,4 +362,5 @@ AND longitude > {lon_min} AND longitude < {lon_max};
                            clusters=centroids,
                            cluster_shape=cluster_shape.to_dict(),
                            kde_score_max=kde_score_max,
+                           top3=cluster_top3.to_dict(orient='index'),
                            center=query_latlon)

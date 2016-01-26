@@ -118,6 +118,7 @@
 		 var heatmap;
 		 var heatpoints = [];
 		 var markers = [];
+		 var top3_markers = [];
 		 var ellipses = [];
 		 var is_marker = 0; /* 0: heatmap, 1: markers, 2: cluster */
 		 var info_window_cluster;
@@ -201,9 +202,9 @@
 			 heatmap = new google.maps.visualization.HeatmapLayer({
 				 data: getPoints(),
 				 map: map,
-				 radius: 0.003,
+				 radius: 0.002,
 				 dissipating: false,
-				 maxIntensity: 10
+				 maxIntensity: 8
 			 });
 			 
 			 var dataset = {{ photos|tojson }};
@@ -211,6 +212,7 @@
 			 var clusters = {{ cluster_shape|tojson }};
 			 var num_labels = {{ num_labels }};
 			 var max_label = {{ max_label }};
+			 var top3 = {{ top3|tojson }};
 			 
 			 var colors20 = d3.scale.category20().range();
 
@@ -235,8 +237,8 @@
 				 heatpoints.push({
 					 location: new google.maps.LatLng(
 						 parseFloat(d["latitude"]),
-						 parseFloat(d["longitude"])),
-					 weight: parseFloat(d["kde_score"])}
+						 parseFloat(d["longitude"]))}
+					 /* 					 weight: parseFloat(d["kde_score"])} */
 				 );
 			 }
 
@@ -289,6 +291,64 @@
 				 });
 				 
 			 });
+
+
+			 /* top 3 clusters */
+			 jQuery.each(top3, function(i, d) {
+				 
+				 var pc = pinColors(parseFloat(i)).slice(1);
+				 var latlng = {lat: parseFloat(d["latitude"]),
+							   lng: parseFloat(d["longitude"])};
+
+				 var pinColor = pc;
+				 var pinImage = 
+				 new google.maps.MarkerImage(
+					 "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|" + pinColor,
+					 new google.maps.Size(21, 34),
+					 new google.maps.Point(0,0),
+					 new google.maps.Point(10, 34));
+
+				 var circle = new google.maps.Marker({
+					 position: latlng,
+					 map: map,
+					 title: 'top',
+					 icon: pinImage,
+					 zIndex: 1000000,
+					 optimized: false
+				 });
+				 
+				 /* var circle = new google.maps.Marker({
+					position: latlng,
+					icon: {
+					path: google.maps.SymbolPath.CIRCLE,
+					fillOpacity: 1.0,
+					fillColor: pc,
+					strokeOpacity: 1.0,
+					strokeColor: 'gray',
+					strokeWeight: 1.0, 
+					scale: 9
+					},
+					map: null
+					});
+				  */
+				 top3_markers.push(circle);
+
+				 var contentstring = "<p>" + d["description"] + "<\p>"
+								   + "<p><div class=\"tags\">"
+								   + d["tags"] + "</div><\p>"
+								   + "<a href=\""+ d["url_m"] + "\">"
+								   + "<img src=\""+ d["url_t"] + "\">"
+								   + "</a>"
+								   + "<p>" + d["datetaken"] + "</p>"
+								   + "<p>" + d["label"] + "</p>";
+
+				 circle.addListener('click', function() {
+					 infowindow.setContent(contentstring);
+					 infowindow.open(map, circle);						 						 
+				 });
+				 
+			 });
+
 
 			 /* heat map only			  */
 			 map.addListener('click', function(event) {
@@ -396,9 +456,9 @@
 				 title: 'center'
 			 });
 
-			 /* 				 heatmap is off in the beginning */
+			 /* heatmap and top3 markers are on in the beginning */
 			 heatmap.setMap(map);
-			 
+			 showTop3();
 		 }
 		 
 		 function getPoints() {
@@ -416,13 +476,16 @@
 			 /* heatmap --> markers */
 			 else if (is_marker==0){
 				 heatmap.setMap(null);
+				 clearTop3();
 				 showMarkers();
+				 showTop3();
 				 is_marker=1;
 			 }
 			 /* clusters --> heatmap */
 			 else{
 				 clearClusters();
 				 heatmap.setMap(map);
+				 showTop3();
 				 is_marker = 0;
 			 }
 
@@ -439,6 +502,19 @@
 				 markers[i].setMap(map);
 			 }
 		 }
+
+		 function showTop3() {
+			 for (var i = 0; i < top3_markers.length; i++) {
+				 top3_markers[i].setMap(map);
+			 }
+		 }
+
+		 function clearTop3() {
+			 for (var i = 0; i < top3_markers.length; i++) {
+				 top3_markers[i].setMap(null);
+			 }
+		 }
+
 
 		 function clearClusters() {
 			 for (var i = 0; i < ellipses.length; i++) {
