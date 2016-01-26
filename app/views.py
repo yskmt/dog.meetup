@@ -126,7 +126,7 @@ SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t,url_m
 FROM photo_data_table
 WHERE latitude > {lat_min} AND latitude < {lat_max} 
 AND longitude > {lon_min} AND longitude < {lon_max}
-AND tags LIKE '%dog%';
+AND (tags LIKE '%dog%' OR description LIKE '%dog%');
 """.format(lat_min=sbox[1], lat_max=sbox[3],
            lon_min=sbox[0], lon_max=sbox[2],
            tag='dog')
@@ -205,9 +205,7 @@ AND tags LIKE '%dog%';
 
     kde_score = np.exp(kde.score_samples(query_results[['x','y','hour']]))
 
-    kde_score_max = np.max(kde_score)/2.0
     kde_score_max = np.sort(kde_score)[::-1][len(kde_score)/10]
-
     kde_score /= (kde_score_max/5.0)
     kde_score[kde_score>5.0] = 5.0
     
@@ -229,8 +227,8 @@ AND tags LIKE '%dog%';
     query_results = query_results[hours==query_time]
 
     # drop small-element cluster after sliced by an hour
-    min_cluster = 10
-    idx_preserve = (query_results.groupby('label')['label'].count()!=min_cluster)
+    min_cluster = 5
+    idx_preserve = (query_results.groupby('label')['label'].count()>min_cluster)
     idx_preserve = idx_preserve[idx_preserve==True]
     query_results = query_results[query_results.label.isin(idx_preserve.index)]
 
@@ -239,6 +237,9 @@ AND tags LIKE '%dog%';
     kde.score_samples(query_results[['x','y','hour']])
     qu_re['hour'] = qu_re['hour'].apply(np.floor)
     kde_score_2 = np.exp(kde.score_samples(qu_re))
+
+    # kde_score_max = np.sort(kde_score_2)[::-1][len(kde_score_2)/15]
+    
     kde_score_2 /= (kde_score_max/5.0)
     kde_score_2[kde_score_2>5.0] = 5.0
     query_results['kde_score_2'] = kde_score_2

@@ -201,9 +201,9 @@
 			 heatmap = new google.maps.visualization.HeatmapLayer({
 				 data: getPoints(),
 				 map: map,
-				 radius: 0.003,
+				 radius: 0.005,
 				 dissipating: false,
-				 maxIntensity: 50
+				 maxIntensity: 20
 			 });
 			 
 			 var dataset = {{ photos|tojson }};
@@ -231,11 +231,18 @@
 			 jQuery.each(dataset, function(i, d) {
 				 
 				 heatpoints.push({
-					 location: new google.maps.LatLng(
-						 parseFloat(d["latitude"]),
-						 parseFloat(d["longitude"])),
-					 weight: parseFloat(d["kde_score_2"])}
+				  	 location: new google.maps.LatLng(
+				  		 parseFloat(d["latitude"]),
+				  		 parseFloat(d["longitude"])),
+				  	 weight: parseFloat(d["kde_score_2"])}
 				 );
+
+				 /* 
+					heatpoints.push({
+					location: new google.maps.LatLng(
+					parseFloat(d["latitude"]),
+					parseFloat(d["longitude"]))}
+					); */
 
 				 var pc = pinColors(parseFloat(d["label"]));
 				 var latlng = {lat: parseFloat(d["latitude"]),
