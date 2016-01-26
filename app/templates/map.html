@@ -187,9 +187,9 @@
 			 heatmap = new google.maps.visualization.HeatmapLayer({
 				 data: getPoints(),
 				 map: map,
-				 radius: 0.003,
+				 radius: 0.002,
 				 dissipating: false,
-				 maxIntensity: 10
+				 maxIntensity: 20
 			 });
 			 
 			 var dataset = {{ photos|tojson }};

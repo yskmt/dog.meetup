@@ -210,13 +210,20 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     kde.fit(query_results[['x','y','hour']])
 
     kde_score = np.exp(kde.score_samples(query_results[['x','y','hour']]))
-    kde_score_max = np.mean(kde_score)
+    kde_score_max = np.max(kde_score)
 
     query_results = pd.concat(
         [query_results,
-         pd.DataFrame(kde_score/(kde_score_max), index=query_results.index,
+         pd.DataFrame(kde_score/(kde_score_max)/0.2, index=query_results.index,
                       columns=['kde_score'])], axis=1)
 
+    import matplotlib.pyplot as plt
+    
+    query_results['kde_score'].hist(bins=100)
+    plt.savefig('h1.png')
+    plt.close()
+
+    
     # save kde model
     joblib.dump(kde, 'kde.pkl')
     
