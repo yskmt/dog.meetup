@@ -201,9 +201,9 @@
 			 heatmap = new google.maps.visualization.HeatmapLayer({
 				 data: getPoints(),
 				 map: map,
-				 radius: 0.002,
+				 radius: 0.003,
 				 dissipating: false,
-				 maxIntensity: 8
+				 maxIntensity: 50
 			 });
 			 
 			 var dataset = {{ photos|tojson }};
@@ -233,8 +233,8 @@
 				 heatpoints.push({
 					 location: new google.maps.LatLng(
 						 parseFloat(d["latitude"]),
-						 parseFloat(d["longitude"]))}
-					 /* 					 weight: parseFloat(d["kde_score"])} */
+						 parseFloat(d["longitude"])),
+					 weight: parseFloat(d["kde_score_2"])}
 				 );
 
 				 var pc = pinColors(parseFloat(d["label"]));
@@ -274,13 +274,14 @@
 			 });
 
 			 var directionsService = new google.maps.DirectionsService;
-			 var directionsDisplay = new google.maps.DirectionsRenderer;
-			 directionsDisplay.setMap(map);
+			 var directionsDisplays = [];
+			 var k=0;
+			 /* 			 directionsDisplay.setMap(map); */
 
 			 /* top 3 clusters */
 			 jQuery.each(top3, function(i, d) {
 				 
-				 var pc = pinColors(parseFloat(i)).slice(1);
+				 var pc = pinColors(parseFloat(d["label"])).slice(1);
 				 var latlng = {lat: parseFloat(d["latitude"]),
 							   lng: parseFloat(d["longitude"])};
 
@@ -303,23 +304,83 @@
 				 
 				 top3_markers.push(circle);
 
-				 var contentstring = "<p>" + d["description"] + "<\p>"
-								   + "<p><div class=\"tags\">"
-								   + d["tags"] + "</div><\p>"
-								   + "<a href=\""+ d["url_m"] + "\">"
-								   + "<img src=\""+ d["url_t"] + "\">"
-								   + "</a>"
-								   + "<p>" + d["datetaken"] + "</p>"
-								   + "<p>" + d["label"] + "</p>";
+				 var contentstring = "<p>" + d["kde_score_2"] + "</p>";
 
-				 circle.addListener('click', function() {
-					 infowindow.setContent(contentstring);
-					 infowindow.open(map, circle);						 						 
-				 });
+				 circle.addListener('click', function(event) {
+					 
+					 /* ajax request */
+					 $.getJSON('/_add_numbers', {
+						 lat: event.latLng.lat(),
+						 lon: event.latLng.lng(),
+						 lat_c: myLatLng.lat,
+						 lon_c: myLatLng.lng,
+						 kde_score_max: kde_score_max
+					 }, function(data) {
+
+						 score = [];
+						 $.each(data.result[0], function(i,d){
+							 /* v: time of day, f: string */
+							 if (+i == +hour_24){
+								 score.push([{v: [(+i), 0, 0], f: i}, d, 'red']);
+							 }
+							 else{
+								 score.push([{v: [(+i), 0, 0], f: i}, d, 'color: #76A7FA']);
+							 }
+						 });
+
+						 var data = new google.visualization.DataTable();
+						 data.addColumn('timeofday', 'Time of a Day');
+						 data.addColumn('number', '');
+						 data.addColumn({ type: 'string', role: 'style' });
+						 
+						 data.addRows(score);
+						 
+						 var options = {
+							 title: 'Dog Level Throughout a Day ' + d['kde_score_2'],
+							 hAxis: {
+								 title: 'Time of a Day',
+								 format: 'h:mm a',
+								 viewWindow: {
+									 min: [0, 0, 0],
+									 max: [24, 0, 0]
+								 }
+							 },
+							 vAxis: {
+								 title: 'score',
+								 minValue: 0,
+								 maxValue: 5
+							 },
+							 legend: 'none'
+						 };
+
+						 var node        = document.createElement('div'),
+							 info_window = new google.maps.InfoWindow(),
+							 chart       = new google.visualization.ColumnChart(node);
+						 
+						 chart.draw(data, options);
+						 
+						 /* Replace the info window's content and position. */
+						 info_window.setContent(node);
+						 info_window.setPosition(event.latLng);
+						 info_window.open(map);
+					 });
+
+				 }); /* addListner */
+
 				 
-					 calculateAndDisplayRoute(directionsService, directionsDisplay,
-											  myLatLng, latlng);
-					 directionsDisplay.setMap(map);
+				 directionsDisplays.push(
+					 new google.maps.DirectionsRenderer({
+						 polylineOptions: {
+							 strokeColor: '#'+pc
+						 },
+						 preserveViewport: true
+					 })
+				 );
+
+				 calculateAndDisplayRoute(directionsService, directionsDisplays[k],
+										  myLatLng, latlng);
+				 directionsDisplays[k].setMap(map);
+				 k += 1;
 			 });
 
 
@@ -385,7 +446,8 @@
 					 info_window.setPosition(event.latLng);
 					 info_window.open(map);
 				 });
-			 });
+
+			 }); /* addListner */
 
 			 /* calculate the minimum dlat and dlon for cluster radii */
 			 var R = 6371.0;
@@ -436,8 +498,7 @@
 		 }  /* initMapp */
 
 		 function calculateAndDisplayRoute(directionsService, directionsDisplay,
-		 originLatLng, destLatLng) 
-		 {
+		 originLatLng, destLatLng){
 			 directionsService.route({
 				 origin: originLatLng,
 				 destination: destLatLng,
@@ -449,6 +510,7 @@
 					 window.alert('Directions request failed due to ' + status);
 				 }
 			 });
+			 directionsDisplay.setOptions( { suppressMarkers: true } );
 		 }
 		 
 		 function getPoints() {

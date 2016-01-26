@@ -64,11 +64,12 @@ def add_numbers():
         return None
 
     xy = latlon_to_dist((lat,lon), (lat_c,lon_c))
-    
+
     kde_score = np.exp(kde.score_samples(
         np.array([np.ones(24)*xy[0], np.ones(24)*xy[1], np.arange(0,24)]).T))
-    kde_score /= (kde_score_max*0.2)
-    
+
+    kde_score /= (kde_score_max/5.0)
+    kde_score[kde_score>5.0] = 5.0
     
     return jsonify(result=pd.DataFrame(kde_score).to_dict())
 
@@ -114,7 +115,7 @@ def map_output():
 # FROM photo_data_table
 # WHERE latitude > {lat_min} AND latitude < {lat_max} 
 # AND longitude > {lon_min} AND longitude < {lon_max}
-# AND tags LIKE '%{tag}%'
+# AND tags LIKE '%{tag}%' 
 # AND DATE_PART('hour', datetaken) = {hour};
 # """.format(lat_min=sbox[1], lat_max=sbox[3],
 #            lon_min=sbox[0], lon_max=sbox[2],
@@ -124,7 +125,8 @@ def map_output():
 SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t,url_m
 FROM photo_data_table
 WHERE latitude > {lat_min} AND latitude < {lat_max} 
-AND longitude > {lon_min} AND longitude < {lon_max};
+AND longitude > {lon_min} AND longitude < {lon_max}
+AND tags LIKE '%dog%';
 """.format(lat_min=sbox[1], lat_max=sbox[3],
            lon_min=sbox[0], lon_max=sbox[2],
            tag='dog')
@@ -145,8 +147,8 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     # convert datetaken to hour taken
     # scale: 1.0 means that 1 hour corresponds to 1 km
     scale = 1.0
-    hours = query_results['datetaken'].apply(lambda x: x.hour+x.minute/60.0) * scale
-    xyh = pd.concat([xy[['x', 'y']], hours], axis=1)
+    hours = query_results['datetaken'].apply(lambda x: x.hour+x.minute/60.0)
+    xyh = pd.concat([xy[['x', 'y']], hours*scale], axis=1)
 
     query_results['hour'] = hours
     
@@ -195,18 +197,23 @@ AND longitude > {lon_min} AND longitude < {lon_max};
 
         
     # KDE
-    kde = KernelDensity(bandwidth=0.5,
+    kde = KernelDensity(bandwidth=0.2,
                         kernel='gaussian', algorithm='ball_tree')
     # kde = GMM(n_components=10, covariance_type='full')
     
     kde.fit(query_results[['x','y','hour']])
 
     kde_score = np.exp(kde.score_samples(query_results[['x','y','hour']]))
-    kde_score_max = np.max(kde_score)
+
+    kde_score_max = np.max(kde_score)/2.0
+    kde_score_max = np.sort(kde_score)[::-1][len(kde_score)/10]
+
+    kde_score /= (kde_score_max/5.0)
+    kde_score[kde_score>5.0] = 5.0
     
     query_results = pd.concat(
         [query_results,
-         pd.DataFrame(kde_score/(kde_score_max)/0.2, index=query_results.index,
+         pd.DataFrame(kde_score, index=query_results.index,
                       columns=['kde_score'])], axis=1)
     
     # import matplotlib.pyplot as plt    
@@ -222,33 +229,34 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     query_results = query_results[hours==query_time]
 
     # drop small-element cluster after sliced by an hour
-    min_cluster = 5
+    min_cluster = 10
     idx_preserve = (query_results.groupby('label')['label'].count()!=min_cluster)
     idx_preserve = idx_preserve[idx_preserve==True]
     query_results = query_results[query_results.label.isin(idx_preserve.index)]
+
+    # re-calucalte the kde score exactly at the querried hour
+    qu_re = query_results[['x','y','hour']]    
+    kde.score_samples(query_results[['x','y','hour']])
+    qu_re['hour'] = qu_re['hour'].apply(np.floor)
+    kde_score_2 = np.exp(kde.score_samples(qu_re))
+    kde_score_2 /= (kde_score_max/5.0)
+    kde_score_2[kde_score_2>5.0] = 5.0
+    query_results['kde_score_2'] = kde_score_2
     
-
-    label_groups = query_results[['kde_score', 'label']].groupby('label')
-    
-    max_score_label = label_groups.max()
-    max_idx_label = label_groups.idxmax()
-
-    # descending order
-    idx_sorted = np.array(np.argsort(max_score_label['kde_score']))[::-1]
-
     # take top 3 clusters
-    cluster_top3 = max_score_label.iloc[idx_sorted][:3]
-    id_repr = max_idx_label.iloc[idx_sorted][:3]
+    n_tops = 5
+    label_groups = query_results[['kde_score_2', 'label']].groupby('label')
+    label_measure = label_groups.mean()
 
-    # taking centroid
-    cluster_centers = query_results.groupby('label')[['latitude','longitude']].mean().loc[cluster_top3.index]
+    top3_labels = label_measure.sort('kde_score_2', ascending=False)[:n_tops]
 
-    # taking max
-    cluster_centers = query_results.loc[np.array(id_repr.kde_score)][['latitude','longitude']]
-    cluster_centers.index = id_repr.index
-    
-    cluster_top3 = pd.concat([cluster_top3, cluster_centers], axis=1)
-    
+    top3_repr = []
+    for idx in top3_labels.index:
+        idx_max = query_results[query_results['label']==idx]['kde_score_2'].idxmax()
+        top3_repr.append(query_results.loc[idx_max])
+        
+    top3_repr = pd.concat(top3_repr, axis=1)
+
     if query_results.size == 0:
         return render_template("map.html",
                                photos=[{}],
@@ -311,5 +319,5 @@ AND longitude > {lon_min} AND longitude < {lon_max};
                            clusters=centroids,
                            cluster_shape=cluster_shape.to_dict(),
                            kde_score_max=kde_score_max,
-                           top3=cluster_top3.to_dict(orient='index'),
+                           top3=top3_repr.to_dict(),
                            center=query_latlon)
