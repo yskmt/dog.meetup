@@ -46,6 +46,10 @@ print engine.url
 con = None
 con = psycopg2.connect(database = dbname, user = username)
 
+def get_stars(score):
+    return score/0.001 if score>0.001 else 0.0
+
+
 @app.route('/')
 @app.route('/index')
 @app.route('/input')
