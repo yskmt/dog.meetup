@@ -27,6 +27,7 @@
 		<meta id="hour" data-name="{{ hour }}">
 		<meta id="hour_24" data-name="{{ hour_24 }}">
 		<meta id="kde_score_max" data-name="{{ kde_score_max }}">
+		<meta id="tempfile" data-name="{{ tempfile }}">
 		
 	</head>
 
@@ -125,6 +126,7 @@
 		 var hour = $('meta#hour').data()['name'];
 		 var hour_24 = $('meta#hour_24').data()['name'];
 		 var kde_score_max = $('meta#kde_score_max').data()['name'];
+		 var tempfile = $('meta#tempfile').data()['name'];
 
 		 function CenterControl(controlDiv, map) {
 
@@ -321,7 +323,8 @@
 						 lon: event.latLng.lng(),
 						 lat_c: myLatLng.lat,
 						 lon_c: myLatLng.lng,
-						 kde_score_max: kde_score_max
+						 kde_score_max: kde_score_max,
+						 tempfile: tempfile
 					 }, function(data) {
 
 						 score = [];
@@ -343,7 +346,7 @@
 						 data.addRows(score);
 						 
 						 var options = {
-							 title: 'Dog Level Throughout a Day ' + d['kde_score_2'],
+							 title: 'Dog Level Throughout a Day (out of 5)',
 							 hAxis: {
 								 title: 'Time of a Day',
 								 format: 'h:mm a',
@@ -353,9 +356,10 @@
 								 }
 							 },
 							 vAxis: {
-								 title: 'score',
+								 title: 'level',
 								 minValue: 0,
-								 maxValue: 5
+								 maxValue: 5.5,
+								 ticks: [0, 1, 2, 3, 4, 5]
 							 },
 							 legend: 'none'
 						 };
@@ -403,7 +407,8 @@
 					 lon: event.latLng.lng(),
 					 lat_c: myLatLng.lat,
 					 lon_c: myLatLng.lng,
-					 kde_score_max: kde_score_max
+					 kde_score_max: kde_score_max,
+					 tempfile: tempfile
 				 }, function(data) {
 
 					 score = [];
@@ -425,7 +430,7 @@
 					 data.addRows(score);
 					 
 					 var options = {
-						 title: 'Dog Level Throughout a Day',
+						 title: 'Dog Level Throughout a Day (out of 5)',
 						 hAxis: {
 							 title: 'Time of a Day',
 							 format: 'h:mm a',
@@ -435,9 +440,10 @@
 							 }
 						 },
 						 vAxis: {
-							 title: 'score',
+							 title: 'level',
 							 minValue: 0,
-							 maxValue: 5
+							 maxValue: 5.5,
+							 ticks: [0, 1, 2, 3, 4, 5]
 						 },
 						 legend: 'none'
 					 };
