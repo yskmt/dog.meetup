@@ -1,3 +1,9 @@
+app/auths.py
 *.pyc
 junk
 *.csv
+*.npy
+*.pkl
+*.jpg
+*.png
+.DS*

@@ -8,10 +8,14 @@ ImageDataLayer).
 
 """
 from __future__ import print_function
-import argparse
-import os
 import sys
-import random
+import os.path
+
+from sqlalchemy import create_engine
+from sqlalchemy_utils import database_exists, create_database
+import psycopg2
+import urllib
+from tqdm import tqdm
 
 import cv2
 import numpy as np
@@ -24,107 +28,21 @@ from chainer.functions import caffe
 
 import pandas as pd
 
-model = 'bvlc_googlenet.caffemodel'
-do_db = False
-download = False
-gpu = -1
 
-###############################################################################
-# read url list
-from sqlalchemy import create_engine
-from sqlalchemy_utils import database_exists, create_database
-import psycopg2
+def cnn_dog(photo_file, idx, categories_dog, func, gpu=-1, verbose=False):
 
-if do_db:
 
-    dbname = 'photo_db'
-    username = 'ysakamoto'
-
-    engine = create_engine('postgres://%s@localhost/%s'%(username,dbname))
-    print(engine.url)
-
-    con = None
-    con = psycopg2.connect(database = dbname, user = username)
-
-    # Generate a background image for the title page (just list of addresses)
-    # get photos with most views
-    sql_query = """
-    SELECT DISTINCT *
-    FROM photo_data_table
-    ORDER BY views LIMIT 1000;
-    """
-    photo_popular = pd.read_sql_query(sql_query,con)
-    photo_popular.to_csv('dog_photo_urls.csv', index=0)
-
-###############################################################################
-# download files
-if download:
-
-    import urllib
-
-    testfile = urllib.URLopener()
-
-    for i, idx in enumerate(photo_popular.index):
-        photo = photo_popular.loc[idx]
-        if i%10==0:
-            print(i)
-        testfile.retrieve(photo.url_m, 'photos/%d.%s'
-                          %(photo.id,
-                            photo.url_m.split('.')[-1]))
-
+    def forward(x, t):
+        y, = func(inputs={'data': x}, outputs=['loss3/classifier'],
+                  disable=['loss1/ave_pool', 'loss2/ave_pool'],
+                  train=False)
+        return F.softmax_cross_entropy(y, t), F.accuracy(y, t)
+    def predict(x):
+        y, = func(inputs={'data': x}, outputs=['loss3/classifier'],
+                  disable=['loss1/ave_pool', 'loss2/ave_pool'],
+                  train=False)
+        return F.softmax(y)
     
-###############################################################################
-# initialization
-
-print('Loading Caffe model file %s...' % model, file=sys.stderr)
-try:
-    func
-except NameError:
-    func = caffe.CaffeFunction(model)
-print('Loaded', file=sys.stderr)
-
-
-in_size = 224
-# Constant mean over spatial pixels
-mean_image = np.ndarray((3, 256, 256), dtype=np.float32)
-mean_image[0] = 104
-mean_image[1] = 117
-mean_image[2] = 123
-
-def forward(x, t):
-    y, = func(inputs={'data': x}, outputs=['loss3/classifier'],
-              disable=['loss1/ave_pool', 'loss2/ave_pool'],
-              train=False)
-    return F.softmax_cross_entropy(y, t), F.accuracy(y, t)
-def predict(x):
-    y, = func(inputs={'data': x}, outputs=['loss3/classifier'],
-              disable=['loss1/ave_pool', 'loss2/ave_pool'],
-              train=False)
-    return F.softmax(y)
-
-
-cropwidth = 256 - in_size
-start = cropwidth // 2
-stop = start + in_size
-mean_image = mean_image[:, start:stop, start:stop].copy()
-target_shape = (256, 256)
-output_side_length=256
-
-
-###############################################################################
-# run CNN
-# with open('synset_words.txt') as f:
-#     with open('labels.txt', 'w') as fw:
-#         for l in f:
-#             fw.write(l[10:])
-
-photo_popular = pd.read_csv('dog_photo_urls.csv', index_col=0)
-categories = np.loadtxt("labels_dog.txt", str, delimiter="\t")
-categories_dog = [i for i in range(len(categories)) if 'dog' in categories[i]][:-2]
-
-
-def cnn_dog(photo_file, idx, categories_dog, gpu=-1, verbose=False):
-        
     image = cv2.imread(photo_file)
     height, width, depth = image.shape
     new_height = output_side_length
@@ -178,23 +96,95 @@ def cnn_dog(photo_file, idx, categories_dog, gpu=-1, verbose=False):
 
     return False
 
-                
-    # pd.DataFrame(name_score, columns=['label', 'prob'])\
-    #   .to_csv('photos/%d.csv' %(idx))
 
+def get_run_cnn(dbname, username, offset,
+                categories_dog, func, limit=100):
 
-# dog_label = []
-# for i, idx in enumerate(photo_popular.index[:10]):
-#     photo = photo_popular.loc[idx]
+    # get photo data from database
+    con = None
+    con = psycopg2.connect(database=dbname, user=username)
     
-#     if i%10==0:
-#         print(i)
+    sql_query = """
+    SELECT DISTINCT *
+    FROM photo_data_table
+    ORDER BY index LIMIT {limit} OFFSET {offset};
+    """.format(limit=limit, offset=offset)
+    photos = pd.read_sql_query(sql_query,con)
+
+    con.close()
+
+    # download file and run cnn
+    for i in xrange(photos.shape[0]):
+
+        photo = photos.loc[i]
+        photo_url = photo.url_m
+        if photo_url is None:
+            photo_url = photo.url_t
         
-#     photo_file = 'photos/%d.%s' %(idx, photo.url_m.split('.')[-1])
+        photo_name = photo_url, 'photos/%d.%s' %(photo.id,
+                                                 photo_url.split('.')[-1])
 
-#     dog_label.append(cnn_dog(photo_file, idx, categories_dog))
+        if not os.path.exists(photo_name[1]):
+            urllib.urlretrieve(*photo_name)
+
+        if not os.path.exists(photo_name[1].replace('jpg', 'csv')):
+            cnn_dog(photo_name[1], photo.id, categories_dog, func)
+
+    
+###############################################################################
+# initialization of the caffe model
+
+categories = np.loadtxt("labels_dog.txt", str, delimiter="\t")
+categories_dog = [i for i in range(len(categories)) if 'dog' in categories[i]][:-2]
+
+model = 'bvlc_googlenet.caffemodel'
+do_db = False
+download = False
+gpu = -1
+
+print('Loading Caffe model file %s...' % model, file=sys.stderr)
+try:
+    func
+except NameError:
+    func = caffe.CaffeFunction(model)
+print('Loaded', file=sys.stderr)
+
+in_size = 224
+
+# Constant mean over spatial pixels
+mean_image = np.ndarray((3, 256, 256), dtype=np.float32)
+mean_image[0] = 104
+mean_image[1] = 117
+mean_image[2] = 123
+
+cropwidth = 256 - in_size
+start = cropwidth // 2
+stop = start + in_size
+mean_image = mean_image[:, start:stop, start:stop].copy()
+target_shape = (256, 256)
+output_side_length=256
+
+###############################################################################
+# run cnn
+
+dbname = 'photo_db'
+username = 'ysakamoto'
+
+limit = 10
+
+# get the total number of photos
+con = None
+con = psycopg2.connect(database=dbname, user=username)
+sql_query = """
+SELECT COUNT(id)
+FROM photo_data_table
+"""
+n_photos = pd.read_sql_query(sql_query,con).values[0][0]
+con.close()
 
 
+for i in tqdm(xrange(110, n_photos/limit+1)):
+    get_run_cnn(dbname, username, i*limit, categories_dog, func, limit)
 
 
 ###############################################################################
@@ -219,16 +209,16 @@ def cnn_dog(photo_file, idx, categories_dog, gpu=-1, verbose=False):
 #     if nd:
 #         not_dogs.append(idx)
 
-from PIL import Image
+# from PIL import Image
 
-img_name = 'test/5862419122.jpg'
+# img_name = 'test/5862419122.jpg'
 
-cnn_dog(img_name, 0, categories_dog, verbose=True)
-image = Image.open(img_name)
-image.show()
+# cnn_dog(img_name, 0, categories_dog, verbose=True)
+# image = Image.open(img_name)
+# image.show()
 
 
-# for nd in not_dogs:
-#     image = Image.open('photos/%d.jpg' %nd)
-#     image.show()
+# # for nd in not_dogs:
+# #     image = Image.open('photos/%d.jpg' %nd)
+# #     image.show()
 
