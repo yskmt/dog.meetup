@@ -13,10 +13,10 @@ from sklearn.metrics import silhouette_score
 from sklearn.neighbors import KernelDensity
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.mixture import GMM
-
 from sklearn.externals import joblib
 
 from datetime import datetime
+from tempfile import NamedTemporaryFile
 
 from geopy.geocoders import Nominatim, GoogleV3 
 
@@ -56,9 +56,10 @@ def add_numbers():
     lat_c = request.args.get('lat_c', 0, type=float)
     lon_c = request.args.get('lon_c', 0, type=float)
     kde_score_max = request.args.get('kde_score_max', 0, type=float)
+    tempfile = request.args.get('tempfile', '')
     
     try:
-        kde = joblib.load('kde.pkl') 
+        kde = joblib.load(tempfile) 
     except:
         print 'kde does not exist!'
         return None
@@ -220,8 +221,9 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     # plt.savefig('h1.png')
     # plt.close()
 
-    # save kde model
-    joblib.dump(kde, 'kde.pkl')
+    # save kde model to a temporary file
+    f = NamedTemporaryFile(delete=False)
+    joblib.dump(kde, f.name)
     
     # return only for the specified hour
     hours = query_results['datetaken'].apply(lambda x: x.hour)
@@ -321,4 +323,5 @@ AND longitude > {lon_min} AND longitude < {lon_max};
                            cluster_shape=cluster_shape.to_dict(),
                            kde_score_max=kde_score_max,
                            top3=top3_repr.to_dict(),
+                           tempfile=f.name,
                            center=query_latlon)
