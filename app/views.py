@@ -81,6 +81,9 @@ def map_output():
     query_address = request.args.get('address')
     query_time = int(request.args.get('time'))
 
+    if query_time>23:
+        query_time=23
+
     try:
         query_distance = float(request.args.get('distance'))
     except ValueError:
@@ -249,7 +252,7 @@ AND longitude > {lon_min} AND longitude < {lon_max};
     # take top 3 clusters
     n_tops = 5
     label_groups = query_results[['kde_score_2', 'label']].groupby('label')
-    label_measure = label_groups.mean()
+    label_measure = label_groups.count()
 
     top3_labels = label_measure.sort('kde_score_2', ascending=False)[:n_tops]
 

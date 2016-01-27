@@ -114,6 +114,21 @@
 		<!-- render map -->
 		<script>
 		 google.load('visualization', '1.0', {'packages':['corechart']});
+
+		 function getAMPM(time){
+			 if (time==0){
+				 return 12 + ' AM';
+			 }
+			 else if (time<=11){
+				 return time + ' AM';
+			 }
+			 else if(time==12){
+				 return time + ' PM';
+			 }
+			 else {
+				 return (time%12) + ' PM';
+			 }
+		 }
 		 
 		 var map;
 		 var heatmap;
@@ -203,7 +218,7 @@
 			 heatmap = new google.maps.visualization.HeatmapLayer({
 				 data: getPoints(),
 				 map: map,
-				 radius: 0.005,
+				 radius: 0.0025,
 				 dissipating: false,
 				 maxIntensity: 20
 			 });
@@ -331,10 +346,10 @@
 						 $.each(data.result[0], function(i,d){
 							 /* v: time of day, f: string */
 							 if (+i == +hour_24){
-								 score.push([{v: [(+i), 0, 0], f: i}, d, 'red']);
+								 score.push([{v: [(+i), 0, 0], f: i}, d, 'red', getAMPM(+i)]);
 							 }
 							 else{
-								 score.push([{v: [(+i), 0, 0], f: i}, d, 'color: #76A7FA']);
+								 score.push([{v: [(+i), 0, 0], f: i}, d, 'color: #76A7FA', getAMPM(+i)]);
 							 }
 						 });
 
@@ -342,6 +357,7 @@
 						 data.addColumn('timeofday', 'Time of a Day');
 						 data.addColumn('number', '');
 						 data.addColumn({ type: 'string', role: 'style' });
+						 data.addColumn({ type: 'string', role: 'tooltip' });
 						 
 						 data.addRows(score);
 						 
@@ -349,11 +365,12 @@
 							 title: 'Dog Level Throughout a Day (out of 5)',
 							 hAxis: {
 								 title: 'Time of a Day',
-								 format: 'h:mm a',
+								 format: 'h a',
 								 viewWindow: {
 									 min: [0, 0, 0],
 									 max: [24, 0, 0]
-								 }
+								 },
+								 ticks: [[0,0,0], [6,0,0], [12,0,0], [18,0,0], [24,0,0]]
 							 },
 							 vAxis: {
 								 title: 'level',
