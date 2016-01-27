@@ -27,7 +27,7 @@ from utils import get_ellipse_coords
 
 default_address = '260 Sheridan Ave, Palo Alto, CA 94306'
 
-username = 'ysakamoto'
+username = 'ubuntu'
 hostname = 'localhost'
 dbname = 'photo_db'
 
