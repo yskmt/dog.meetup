@@ -29,8 +29,8 @@ from chainer.functions import caffe
 import pandas as pd
 
 
-def cnn_dog(photo_file, idx, categories_dog, func, gpu=-1, verbose=False):
-
+def cnn_dog(photo_file, idx, categories_dog, func, gpu=-1, verbose=False,
+            save_csv=True):
 
     def forward(x, t):
         y, = func(inputs={'data': x}, outputs=['loss3/classifier'],
@@ -73,7 +73,8 @@ def cnn_dog(photo_file, idx, categories_dog, func, gpu=-1, verbose=False):
       score=cuda.to_cpu(score.data)
     # print(score.data)
 
-    np.savetxt('photos/%d.csv' %(idx), score.data[0])
+    if save_csv:
+        np.savetxt('photos/%d.csv' %(idx), score.data[0])
     
     sd = np.argsort(score.data[0])[::-1]
 
@@ -191,32 +192,38 @@ FROM photo_data_table
 n_photos = pd.read_sql_query(sql_query,con).values[0][0]
 con.close()
 
-
-for i in tqdm(xrange(st, min(ed, n_photos/limit+1)):
+for i in tqdm(xrange(st, min(ed, n_photos/limit+1))):
     get_run_cnn(dbname, username, i*limit, categories_dog, func, limit)
 
 
 ###############################################################################
-# # postprocessing
-# scores = []
-# for i, idx in enumerate(photo_popular.index):
-#     scores.append(np.loadtxt('photos/%d.csv' %(idx)))
-# scores = np.array(scores).T
+# postprocessing
 
+dog = []
+not_dog = []
+top_k = 20
+ct = 0
+for f in tqdm(os.listdir('photos')):
+    # if ct >100:
+    #     break
+    # ct+=1
+    
+    if 'csv' not in f:
+        continue
+    
+    id = f.split('.')[0]
+    score_top = np.where(np.argsort(np.loadtxt('photos/'+f))>980)[0]
 
-# dogs = []
-# not_dogs = []
-# for i, idx in enumerate(photo_popular.index):
-#     nd = 1
-#     for lb in np.argsort(scores[:,i])[::-1][:20]:
-        
-#         if lb in categories_dog:
-#             dogs.append(idx)
-#             nd = 0
-#             break
+    # check if the top 20 labels have dog-relate ones
+    flg = 0
+    for n in categories_dog:
+        if n in score_top:
+            dog.append(id)
+            flg = 1
+            break
 
-#     if nd:
-#         not_dogs.append(idx)
+    if flg==0:
+        not_dog.append(id)
 
 # from PIL import Image
 

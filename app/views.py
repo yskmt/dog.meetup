@@ -25,7 +25,7 @@ from app.cluster_photos import latlon_to_dist, get_bbox
 from utils import get_ellipse_coords
 
 
-default_address = '260 Sheridan Ave, Palo Alto, CA 94306'
+default_address = 'Golden Gate Park, San Francisco'
 
 username = 'ysakamoto'
 hostname = 'localhost'
