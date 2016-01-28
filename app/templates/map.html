@@ -56,14 +56,76 @@
           </div>
 		  
           <div id="navbar" class="navbar-collapse collapse">
-			<ul class="nav navbar-nav">
-              <li class="active"><a href="#">Home</a></li>
-              <li><a href="#about">About</a></li>
-              <li><a href="#contact">Contact</a></li>
 
-			</ul>
-			
-			<ul class="nav navbar-nav navbar-right">
+			  <ul class="nav navbar-nav navbar-right">
+
+				<li class="search">
+				  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Search<span class="caret"></span></a>
+				  <ul class="dropdown-menu">
+					<li>
+
+
+						<form action="/map" method="GET"
+							  class="navbar-form navbar-left navbar-input-group" role="search">
+				  
+				  <div class="input-group">
+					  <input type="text"
+							 class="form-control"
+							 placeholder="Golden Gate Park, San Francisco"
+							 name="address"
+							 id="address">
+				  </div>
+
+				  <div class="input-group">
+				  <input type="number"
+						 class="form-control"
+						 placeholder="5"
+						 aria-describedby="basic-addon2"
+						 min="1" max="25"
+						 name="distance"
+						 id="distance">
+				  <span class="input-group-addon"
+						id="basic-addon2">
+					  km
+				  </span>
+				  </div>
+				  <div class="input-group">
+				  <select class="input-large" id="time" name="time">
+					  <option value="0">12 AM</option>
+					  <option value="1"> 1 AM</option>
+					  <option value="2"> 2 AM</option>
+					  <option value="3"> 3 AM</option>
+					  <option value="4"> 4 AM</option>
+					  <option value="5"> 5 AM</option>
+					  <option value="6"> 6 AM</option>
+					  <option value="7"> 7 AM</option>
+					  <option value="8"> 8 AM</option>
+					  <option value="9"> 9 AM</option>
+					  <option value="10">10 AM</option>
+					  <option value="11">11 AM</option>
+					  <option value="12">12 PM</option>
+					  <option value="13"> 1 PM</option>
+					  <option value="14"> 2 PM</option>
+					  <option value="15" selected="selected"> 3 PM</option>
+					  <option value="16"> 4 PM</option>
+					  <option value="17"> 5 PM</option>
+					  <option value="18"> 6 PM</option>
+					  <option value="19"> 7 PM</option>
+					  <option value="20"> 8 PM</option>
+					  <option value="21"> 9 PM</option>
+					  <option value="22">10 PM</option>
+					  <option value="23">11 PM</option>
+				  </select>				  
+				  </div>
+				  
+				  <button type="submit" class="btn btn-default">Submit</button>
+				  		</form>
+
+					</li>
+				  </ul>
+				</li>
+
+					  
               <li><a href="../navbar-static-top/">Presentation</a></li>
               <li class="active"><a href="./">Github<span class="sr-only">(current)</span></a></li>
 			</ul>
