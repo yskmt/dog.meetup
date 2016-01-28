@@ -35,108 +35,107 @@
 		<link href="../static/css/starter-template.css"
 			  rel="stylesheet">
 		<!-- <link href="../static/css/style.css" -->
-			  <!-- rel="stylesheet"> -->
+		<!-- rel="stylesheet"> -->
 		
 	</head>
 
 	<body>
 
 
-      <!-- Fixed navbar -->
-      <nav class="navbar navbar-inverse navbar-fixed-top">
-		<div class="container">
-          <div class="navbar-header">
-			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-              <span class="sr-only">Toggle navigation</span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-			</button>
-			<a class="navbar-brand" href="#">Dog.Meetup</a>
-          </div>
-		  
-          <div id="navbar" class="navbar-collapse collapse">
+		<!-- Fixed navbar -->
+		<nav class="navbar navbar-inverse navbar-fixed-top">
+			<div class="container">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="/">Dog.Meetup</a>
+				</div>
+				
+				<div id="navbar" class="navbar-collapse collapse">
 
-			  <ul class="nav navbar-nav navbar-right">
+					<ul class="nav navbar-nav navbar-right">
 
-				<li class="search">
-				  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Search<span class="caret"></span></a>
-				  <ul class="dropdown-menu">
-					<li>
+						<li class="search">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Search<span class="caret"></span></a>
+							<ul class="dropdown-menu">
+								<li>
 
+									<form action="/map" method="GET"
+										  class="navbar-form navbar-left navbar-input-group" role="search">
+										
+										<div class="input-group">
+											<input type="text"
+												   class="form-control"
+												   placeholder="Golden Gate Park, San Francisco"
+												   name="address"
+												   id="address">
+										</div>
 
-						<form action="/map" method="GET"
-							  class="navbar-form navbar-left navbar-input-group" role="search">
-				  
-				  <div class="input-group">
-					  <input type="text"
-							 class="form-control"
-							 placeholder="Golden Gate Park, San Francisco"
-							 name="address"
-							 id="address">
-				  </div>
+										<div class="input-group">
+											<input type="number"
+												   class="form-control"
+												   placeholder="5"
+												   aria-describedby="basic-addon2"
+												   min="1" max="25"
+												   name="distance"
+												   id="distance">
+											<span class="input-group-addon"
+												  id="basic-addon2">
+												km
+											</span>
+										</div>
+										<div class="input-group">
+											<select class="input-large" id="time" name="time">
+												<option value="0">12 AM</option>
+												<option value="1"> 1 AM</option>
+												<option value="2"> 2 AM</option>
+												<option value="3"> 3 AM</option>
+												<option value="4"> 4 AM</option>
+												<option value="5"> 5 AM</option>
+												<option value="6"> 6 AM</option>
+												<option value="7"> 7 AM</option>
+												<option value="8"> 8 AM</option>
+												<option value="9"> 9 AM</option>
+												<option value="10">10 AM</option>
+												<option value="11">11 AM</option>
+												<option value="12">12 PM</option>
+												<option value="13"> 1 PM</option>
+												<option value="14"> 2 PM</option>
+												<option value="15" selected="selected"> 3 PM</option>
+												<option value="16"> 4 PM</option>
+												<option value="17"> 5 PM</option>
+												<option value="18"> 6 PM</option>
+												<option value="19"> 7 PM</option>
+												<option value="20"> 8 PM</option>
+												<option value="21"> 9 PM</option>
+												<option value="22">10 PM</option>
+												<option value="23">11 PM</option>
+											</select>				  
+										</div>
+										
+										<button type="submit" class="btn btn-default">Submit</button>
+				  					</form>
 
-				  <div class="input-group">
-				  <input type="number"
-						 class="form-control"
-						 placeholder="5"
-						 aria-describedby="basic-addon2"
-						 min="1" max="25"
-						 name="distance"
-						 id="distance">
-				  <span class="input-group-addon"
-						id="basic-addon2">
-					  km
-				  </span>
-				  </div>
-				  <div class="input-group">
-				  <select class="input-large" id="time" name="time">
-					  <option value="0">12 AM</option>
-					  <option value="1"> 1 AM</option>
-					  <option value="2"> 2 AM</option>
-					  <option value="3"> 3 AM</option>
-					  <option value="4"> 4 AM</option>
-					  <option value="5"> 5 AM</option>
-					  <option value="6"> 6 AM</option>
-					  <option value="7"> 7 AM</option>
-					  <option value="8"> 8 AM</option>
-					  <option value="9"> 9 AM</option>
-					  <option value="10">10 AM</option>
-					  <option value="11">11 AM</option>
-					  <option value="12">12 PM</option>
-					  <option value="13"> 1 PM</option>
-					  <option value="14"> 2 PM</option>
-					  <option value="15" selected="selected"> 3 PM</option>
-					  <option value="16"> 4 PM</option>
-					  <option value="17"> 5 PM</option>
-					  <option value="18"> 6 PM</option>
-					  <option value="19"> 7 PM</option>
-					  <option value="20"> 8 PM</option>
-					  <option value="21"> 9 PM</option>
-					  <option value="22">10 PM</option>
-					  <option value="23">11 PM</option>
-				  </select>				  
-				  </div>
-				  
-				  <button type="submit" class="btn btn-default">Submit</button>
-				  		</form>
+								</li>
+							</ul>
+						</li>
 
-					</li>
-				  </ul>
-				</li>
-
-					  
-              <li><a href="../navbar-static-top/">Presentation</a></li>
-              <li class="active"><a href="./">Github<span class="sr-only">(current)</span></a></li>
-			</ul>
-			
-          </div><!--/.nav-collapse -->
-		</div>
-      </nav>
+						
+						<li><a href="../navbar-static-top/">Presentation</a></li>
+						<li class="active"><a href="./">Github<span class="sr-only">(current)</span></a></li>
+					</ul>
+					
+				</div><!--/.nav-collapse -->
+			</div>
+		</nav>
 
 
 		<div id="map"></div>
-	  
+		
 		<!-- render map -->
 		<script>
 		 google.load('visualization', '1.0', {'packages':['corechart']});
@@ -388,8 +387,8 @@
 				{ "visibility": "on" },
 				{ "color": "#d88080" },
 				{ "weight": 0.1 } ] } ]; */
-			 var styledMap = new google.maps.StyledMapType(styles,
-														   {name: "Styled Map"});
+				 var styledMap = new google.maps.StyledMapType(styles,
+															   {name: "Styled Map"});
 			 
 			 map = new google.maps.Map(document.getElementById('map'), {
 				 zoom: 13,
@@ -699,7 +698,7 @@
 				 var radii_y = (+d['radii_y']<dlat ? dlat : +d['radii_y']);
 
 				 xys = get_ellipse_coords(radii_x, radii_y,
-		  +d['lon_c'], +d['lat_c'], +d['orientation'], +d['num_pics'], 10);
+		 +d['lon_c'], +d['lat_c'], +d['orientation'], +d['num_pics'], 10);
 
 				 xs = xys[0];
 				 ys = xys[1];
@@ -764,19 +763,19 @@
 
 		 
 		 function calculateAndDisplayRoute(directionsService, directionsDisplay,
-		 originLatLng, destLatLng){
-			 directionsService.route({
-				 origin: originLatLng,
-				 destination: destLatLng,
-				 travelMode: google.maps.TravelMode.WALKING
-			 }, function(response, status) {
-				 if (status === google.maps.DirectionsStatus.OK) {
-					 directionsDisplay.setDirections(response);
-				 } else {
-					 window.alert('Directions request failed due to ' + status);
-				 }
-			 });
-			 directionsDisplay.setOptions( { suppressMarkers: true } );
+										   originLatLng, destLatLng){
+											   directionsService.route({
+												   origin: originLatLng,
+												   destination: destLatLng,
+												   travelMode: google.maps.TravelMode.WALKING
+											   }, function(response, status) {
+												   if (status === google.maps.DirectionsStatus.OK) {
+													   directionsDisplay.setDirections(response);
+												   } else {
+													   window.alert('Directions request failed due to ' + status);
+												   }
+											   });
+											   directionsDisplay.setOptions( { suppressMarkers: true } );
 		 }
 		 
 		 function getPoints() {
@@ -847,26 +846,28 @@
 		 }
 
 
-		 /* scroll after map is loaded */
+		 /* Do not close the dropdown when select is on */
 		 $("document").ready(function(){
-			 document.getElementById('map').scrollIntoView();
+			 $('select').click(function (e) {
+				 e.stopPropagation();
+			 });
 		 });
 		 
 		</script>
 
 		<!-- <script async defer -->
-				<!-- src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA&signed_in=true&libraries=visualization&callback=initMap"></script> -->
+		<!-- src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA&signed_in=true&libraries=visualization&callback=initMap"></script> -->
 
-    
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+		
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA&signed_in=true&libraries=visualization&extension=.js"></script>
+		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA&signed_in=true&libraries=visualization&extension=.js"></script>
 
 
 
-<!-- <script src="http://maps.googleapis.com/maps/api/js?sensor=false&extension=.js"></script> -->
+		<!-- <script src="http://maps.googleapis.com/maps/api/js?sensor=false&extension=.js"></script> -->
 
-<!-- <script src="{{ url_for('static', filename='js/index.js') }}"></script> -->
+		<!-- <script src="{{ url_for('static', filename='js/index.js') }}"></script> -->
 
 		
 		<!-- Bootstrap core JavaScript

@@ -29,7 +29,7 @@ default_address = 'Golden Gate Park, San Francisco'
 
 username = 'ysakamoto'
 hostname = 'localhost'
-dbname = 'photo_db'
+dbname = 'aws_db'
 
 engine = create_engine('postgres://%s@%s/%s'
                        %(username,hostname,dbname))
@@ -114,25 +114,38 @@ def map_output():
     print 'distance = ', query_distance
 
     sbox = get_bbox(query_latlon, query_distance)
-
-#     sql_query = """
-# SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t 
-# FROM photo_data_table
-# WHERE latitude > {lat_min} AND latitude < {lat_max} 
-# AND longitude > {lon_min} AND longitude < {lon_max}
-# AND tags LIKE '%{tag}%' 
-# AND DATE_PART('hour', datetaken) = {hour};
-# """.format(lat_min=sbox[1], lat_max=sbox[3],
-#            lon_min=sbox[0], lon_max=sbox[2],
-#            tag='dog', hour=query_time)
+    
+    #     sql_query = """
+    # SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t 
+    # FROM photo_data_table
+    # WHERE latitude > {lat_min} AND latitude < {lat_max} 
+    # AND longitude > {lon_min} AND longitude < {lon_max}
+    # AND tags LIKE '%{tag}%' 
+    # AND DATE_PART('hour', datetaken) = {hour};
+    # """.format(lat_min=sbox[1], lat_max=sbox[3],
+    #            lon_min=sbox[0], lon_max=sbox[2],
+    #            tag='dog', hour=query_time)
 
     sql_query = """
-SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t,url_m
-FROM photo_data_table
-WHERE latitude > {lat_min} AND latitude < {lat_max} 
-AND longitude > {lon_min} AND longitude < {lon_max};
-""".format(lat_min=sbox[1], lat_max=sbox[3],
-           lon_min=sbox[0], lon_max=sbox[2])
+SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t,url_m,dog
+FROM dog_data_table 
+INNER JOIN photo_data_table 
+ON (dog_data_table.index = photo_data_table.id)
+WHERE photo_data_table.latitude > {lat_min} 
+AND photo_data_table.latitude < {lat_max} 
+AND photo_data_table.longitude > {lon_min} 
+AND photo_data_table.longitude < {lon_max}
+AND dog = 1;"""\
+    .format(lat_min=sbox[1], lat_max=sbox[3],
+            lon_min=sbox[0], lon_max=sbox[2])
+    
+#     sql_query = """
+# SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t,url_m
+# FROM photo_data_table
+# WHERE latitude > {lat_min} AND latitude < {lat_max} 
+# AND longitude > {lon_min} AND longitude < {lon_max};
+# """.format(lat_min=sbox[1], lat_max=sbox[3],
+#            lon_min=sbox[0], lon_max=sbox[2])
 
     query_results = pd.read_sql_query(sql_query, con)
 
