@@ -19,52 +19,67 @@
 		<link rel="stylesheet prefetch" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
 
 		
-		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
-		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap-theme.min.css">
+		<!-- <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/boot<\!-- strap.min.css"> -\-> -->
+		<!-- <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap-theme.min.css"> -->
 		
 		<title>Dog.Meetup</title>
 
-		<link href="../static/css/bootstrap.min.css" rel="stylesheet">
-		<link href="../static/css/starter-template.css" rel="stylesheet">
+		<!-- <link href="../static/css/bootstrap.min.css" rel="stylesheet"> -->
 
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 		<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
 		<script type="text/javascript" src="https://www.google.com/jsapi"></script>
 
+		
 		<script src="{{ url_for('static', filename='js/set_objects.js') }}"></script>
-
-		<script>
-		 $(".original input").on("change", function(){
-			 $(".duplicate input").val(this.value + 'km');
-		 });
-		 $(".duplicate input").on("change", function(){
-			 $(".original input").val(this.value.substring(0, this.value.length - 1));
-		 });
-		</script>
+		<link href="../static/css/starter-template.css"
+			  rel="stylesheet">
+		<link href="../static/css/style.css"
+			  rel="stylesheet">
 		
 	</head>
 
 	<body>
 
-		<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-			<div class="container-fluid">
-				<div class="navbar-header">
-					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-						<span class="sr-only">Toggle navigation</span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-					</button>
-					<a class="navbar-brand" href="/">Dog.Meetup</a>
-				</div>
-				<div id="navbar" class="collapse navbar-collapse">
-					<ul class="nav navbar-nav navbar-right">
-						<li><a href="">Presentation</a></li>
-						<li><a href="">GitHub</a></li>
-					</ul>
-				</div>
-			</div>
-		</nav>
+
+        <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Project name</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
+              <ul class="dropdown-menu">
+                <li><a href="#">Action</a></li>
+                <li><a href="#">Another action</a></li>
+                <li><a href="#">Something else here</a></li>
+                <li role="separator" class="divider"></li>
+                <li class="dropdown-header">Nav header</li>
+                <li><a href="#">Separated link</a></li>
+                <li><a href="#">One more separated link</a></li>
+              </ul>
+            </li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="../navbar/">Default</a></li>
+            <li><a href="../navbar-static-top/">Static top</a></li>
+            <li class="active"><a href="./">Fixed top <span class="sr-only">(current)</span></a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
 
 		<div id="map"></div>
 		
@@ -134,8 +149,175 @@
 			 });
 			 
 		 }
-		 
-		 function initMap() {
+
+		 jQuery(document).ready(function($){
+			 var	main_color = '#0085a1',
+					saturation_value= -20,
+					brightness_value= 5;
+			 var styles = [ 
+				 {
+					 elementType: "labels",
+					 stylers: [
+						 {saturation: saturation_value}
+					 ]
+				 },  
+				 {
+					 featureType: "poi",
+					 elementType: "labels",
+					 stylers: [
+						 {visibility: "off"}
+					 ]
+				 },
+				 {
+					 featureType: 'road.highway',
+					 elementType: 'labels',
+					 stylers: [
+						 {visibility: "off"}
+					 ]
+				 }, 
+				 {
+					 featureType: "road.local", 
+					 elementType: "labels.icon", 
+					 stylers: [
+						 {visibility: "off"} 
+					 ] 
+				 },
+				 {
+					 featureType: "road.arterial", 
+					 elementType: "labels.icon", 
+					 stylers: [
+						 {visibility: "off"}
+					 ] 
+				 },
+				 {
+					 featureType: "road",
+					 elementType: "geometry.stroke",
+					 stylers: [
+						 {visibility: "off"}
+					 ]
+				 },
+				 { 
+					 featureType: "transit", 
+					 elementType: "geometry.fill", 
+					 stylers: [
+						 { hue: main_color },
+						 { visibility: "on" }, 
+						 { lightness: brightness_value }, 
+						 { saturation: saturation_value }
+					 ]
+				 }, 
+				 {
+					 featureType: "poi",
+					 elementType: "geometry.fill",
+					 stylers: [
+						 { hue: main_color },
+						 { visibility: "on" }, 
+						 { lightness: brightness_value }, 
+						 { saturation: saturation_value }
+					 ]
+				 },
+				 {
+					 featureType: "poi.government",
+					 elementType: "geometry.fill",
+					 stylers: [
+						 { hue: main_color },
+						 { visibility: "on" }, 
+						 { lightness: brightness_value }, 
+						 { saturation: saturation_value }
+					 ]
+				 },
+				 {
+					 featureType: "poi.sport_complex",
+					 elementType: "geometry.fill",
+					 stylers: [
+						 { hue: main_color },
+						 { visibility: "on" }, 
+						 { lightness: brightness_value }, 
+						 { saturation: saturation_value }
+					 ]
+				 },
+				 {
+					 featureType: "poi.attraction",
+					 elementType: "geometry.fill",
+					 stylers: [
+						 { hue: main_color },
+						 { visibility: "on" }, 
+						 { lightness: brightness_value }, 
+						 { saturation: saturation_value }
+					 ]
+				 },
+				 {
+					 featureType: "poi.business",
+					 elementType: "geometry.fill",
+					 stylers: [
+						 { hue: main_color },
+						 { visibility: "on" }, 
+						 { lightness: brightness_value }, 
+						 { saturation: saturation_value }
+					 ]
+				 },
+				 {
+					 featureType: "transit",
+					 elementType: "geometry.fill",
+					 stylers: [
+						 { hue: main_color },
+						 { visibility: "on" }, 
+						 { lightness: brightness_value }, 
+						 { saturation: saturation_value }
+					 ]
+				 },
+				 {
+					 featureType: "transit.station",
+					 elementType: "geometry.fill",
+					 stylers: [
+						 { hue: main_color },
+						 { visibility: "on" }, 
+						 { lightness: brightness_value }, 
+						 { saturation: saturation_value }
+					 ]
+				 },
+				 {
+					 featureType: "landscape",
+					 stylers: [
+						 { hue: main_color },
+						 { visibility: "on" }, 
+						 { lightness: brightness_value }, 
+						 { saturation: saturation_value }
+					 ]
+					 
+				 },
+				 {
+					 featureType: "road",
+					 elementType: "geometry.fill",
+					 stylers: [
+						 { hue: main_color },
+						 { visibility: "on" }, 
+						 { lightness: brightness_value }, 
+						 { saturation: saturation_value }
+					 ]
+				 },
+				 {
+					 featureType: "road.highway",
+					 elementType: "geometry.fill",
+					 stylers: [
+						 { hue: main_color },
+						 { visibility: "on" }, 
+						 { lightness: brightness_value }, 
+						 { saturation: saturation_value }
+					 ]
+				 }, 
+				 {
+					 featureType: "water",
+					 elementType: "geometry",
+					 stylers: [
+						 { hue: main_color },
+						 { visibility: "on" }, 
+						 { lightness: brightness_value }, 
+						 { saturation: saturation_value }
+					 ]
+				 }
+			 ];
+
 			 /* 
 				$('div#map').attr("width", $("div.container").width());
 				$('div#map').attr("height", $("div.container").width()); */
@@ -145,13 +327,13 @@
 
 			 /* Create an array of styles. */
 			 /* http://googlemaps.github.io/js-samples/styledmaps/wizard/index.html */
-			 var styles = [
-				 { "featureType": "road",
-				   "elementType": "geometry.stroke",
-				   "stylers": [ { "invert_lightness": true },
-								{ "visibility": "on" },
-								{ "color": "#d88080" },
-								{ "weight": 0.1 } ] } ];
+			 /* var styles = [
+				{ "featureType": "road",
+				"elementType": "geometry.stroke",
+				"stylers": [ { "invert_lightness": true },
+				{ "visibility": "on" },
+				{ "color": "#d88080" },
+				{ "weight": 0.1 } ] } ]; */
 			 var styledMap = new google.maps.StyledMapType(styles,
 														   {name: "Styled Map"});
 			 
@@ -463,7 +645,7 @@
 				 var radii_y = (+d['radii_y']<dlat ? dlat : +d['radii_y']);
 
 				 xys = get_ellipse_coords(radii_x, radii_y,
-		   +d['lon_c'], +d['lat_c'], +d['orientation'], +d['num_pics'], 10);
+		  +d['lon_c'], +d['lat_c'], +d['orientation'], +d['num_pics'], 10);
 
 				 xs = xys[0];
 				 ys = xys[1];
@@ -496,6 +678,34 @@
 				 map.setCenter(myLatLng); 
 			 });
 
+			 
+			 // var map_options = {
+			 //   	center: new google.maps.LatLng(latitude, longitude),
+				 //   	zoom: map_zoom,
+				 //   	panControl: false,
+				 //   	zoomControl: true,
+				 //   	mapTypeControl: false,
+				 //   	streetViewControl: false,
+				 //   	mapTypeId: google.maps.MapTypeId.ROADMAP,
+				 //   	scrollwheel: false,
+				 //   	styles: style,
+				 // 	zoomControlOptions: {
+			 // 		style: google.maps.ZoomControlStyle.SMALL,
+				 // 		position: google.maps.ControlPosition.BOTTOM_CENTER
+			 // 	}
+			 // }
+			 // var map = new google.maps.Map(document.getElementById('map'), map_options);			
+			 // var marker = new google.maps.Marker({
+			 //   	position: new google.maps.LatLng(latitude, longitude),
+				 //     map: map,
+				 //     visible: true,
+				 //  	icon: marker_url,
+				 // });
+		 });
+
+		 
+		 function initMap() {
+			 
 		 }  /* initMap */
 
 		 
@@ -590,9 +800,21 @@
 		 
 		</script>
 
-		<script async defer
-				src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA&signed_in=true&libraries=visualization&callback=initMap"></script>
+		<!-- <script async defer -->
+				<!-- src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA&signed_in=true&libraries=visualization&callback=initMap"></script> -->
 
+    
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA&signed_in=true&libraries=visualization&extension=.js"></script>
+
+
+
+<!-- <script src="http://maps.googleapis.com/maps/api/js?sensor=false&extension=.js"></script> -->
+
+<!-- <script src="{{ url_for('static', filename='js/index.js') }}"></script> -->
+
+		
 		<!-- Bootstrap core JavaScript
 			 ================================================== -->
 		<!-- Placed at the end of the document so the pages load faster -->
