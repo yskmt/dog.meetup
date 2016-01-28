@@ -134,6 +134,15 @@ def get_run_cnn(dbname, username, offset,
 ###############################################################################
 # initialization of the caffe model
 
+if len(sys.argv) < 3:
+    sys.exit()
+
+st = int(sys.argv[1])
+ed = int(sys.argv[2])
+
+print ('start', st)
+print ('end', ed)
+
 categories = np.loadtxt("labels_dog.txt", str, delimiter="\t")
 categories_dog = [i for i in range(len(categories)) if 'dog' in categories[i]][:-2]
 
@@ -183,7 +192,7 @@ n_photos = pd.read_sql_query(sql_query,con).values[0][0]
 con.close()
 
 
-for i in tqdm(xrange(110, n_photos/limit+1)):
+for i in tqdm(xrange(st, min(ed, n_photos/limit+1)):
     get_run_cnn(dbname, username, i*limit, categories_dog, func, limit)
 
 
