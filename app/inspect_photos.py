@@ -220,27 +220,26 @@ for f in tqdm(os.listdir('photos')):
 
 df_dog = pd.DataFrame(dog.values(), index=dog.keys(), columns=['dog_proba'])
 
-# # save the dog scores to database
+# save the dog scores to database
 
-# dbname = 'photo_db'
-# username = 'ysakamoto'
+dbname = 'photo_db'
+username = 'ubuntu'
 
-# engine = create_engine('postgres://%s@localhost/%s'%(username,dbname))
-# print(engine.url)
+engine = create_engine('postgres://%s@/%s'%(username,dbname))
+print(engine.url)
 
-
-# df_dog.to_sql('dog_data_table', engine, if_exists='append')
+df_dog.to_sql('dog_proba_table', engine, if_exists='append')
         
-# # from PIL import Image
+# from PIL import Image
 
-# # img_name = 'test/5862419122.jpg'
+# img_name = 'test/5862419122.jpg'
 
-# # cnn_dog(img_name, 0, categories_dog, verbose=True)
-# # image = Image.open(img_name)
-# # image.show()
+# cnn_dog(img_name, 0, categories_dog, verbose=True)
+# image = Image.open(img_name)
+# image.show()
 
 
-# # # for nd in not_dogs:
-# # #     image = Image.open('photos/%d.jpg' %nd)
-# # #     image.show()
+# # for nd in not_dogs:
+# #     image = Image.open('photos/%d.jpg' %nd)
+# #     image.show()
 
