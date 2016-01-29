@@ -1,43 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 
-		<meta name="description" content="Dog.Meetup: Dog meetup app">
-		<meta name="author" content="Yusuke Sakamoto">
-		<link rel="icon" href="../../favicon.ico">
+	<meta name="description" content="Dog.Meetup: Dog meetup app">
+	<meta name="author" content="Yusuke Sakamoto">
+	<link rel="icon" href="../../favicon.ico">
 
-		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
-		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap-theme.min.css">
-		
-		<title>Dog.Meetup</title>
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap-theme.min.css">
+	
+	<title>Dog.Meetup</title>
 
-		<link href="../static/css/bootstrap.min.css" rel="stylesheet">
-		<link href="../static/css/starter-template.css" rel="stylesheet">
+	<link href="../static/css/bootstrap.min.css" rel="stylesheet">
+	<link href="../static/css/starter-template.css" rel="stylesheet">
 
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-		<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
-		<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
 
-		<script src="{{ url_for('static', filename='js/set_objects.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/set_objects.js') }}"></script>
 
-		<script>
-		 $(".original input").on("change", function(){
-			 $(".duplicate input").val(this.value + 'km');
-		 });
-		 $(".duplicate input").on("change", function(){
-			 $(".original input").val(this.value.substring(0, this.value.length - 1));
-		 });
-		</script>
-		
-	</head>
+	<script>
+	  $(".original input").on("change", function(){
+	  $(".duplicate input").val(this.value + 'km');
+	  });
+	  $(".duplicate input").on("change", function(){
+	  $(".original input").val(this.value.substring(0, this.value.length - 1));
+	  });
+	</script>
+	
+  </head>
 
-	<body>
+  <body>
 
+
+		<!-- Fixed navbar -->
 		<nav class="navbar navbar-inverse navbar-fixed-top">
-			<div class="container-fluid">
+			<div class="container">
 				<div class="navbar-header">
 					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
 						<span class="sr-only">Toggle navigation</span>
@@ -47,135 +49,197 @@
 					</button>
 					<a class="navbar-brand" href="/">Dog.Meetup</a>
 				</div>
-				<div id="navbar" class="collapse navbar-collapse">
+				
+				<div id="navbar" class="navbar-collapse collapse">
+
 					<ul class="nav navbar-nav navbar-right">
-						<li><a href="">Presentation</a></li>
-						<li><a href="">GitHub</a></li>
+
+						<li class="search">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Search<span class="caret"></span></a>
+							<ul class="dropdown-menu">
+								<li>
+
+									<form action="/map" method="GET"
+										  class="navbar-form navbar-left navbar-input-group" role="search">
+										
+										<div class="input-group">
+											<input type="text"
+												   class="form-control"
+												   placeholder="Golden Gate Park, San Francisco"
+												   name="address"
+												   id="address">
+										</div>
+
+										<div class="input-group">
+											<input type="number"
+												   class="form-control"
+												   placeholder="5"
+												   aria-describedby="basic-addon2"
+												   min="1" max="25"
+												   name="distance"
+												   id="distance">
+											<span class="input-group-addon"
+												  id="basic-addon2">
+												km
+											</span>
+										</div>
+										<div class="input-group">
+											<select class="input-large" id="time" name="time">
+												<option value="0">12 AM</option>
+												<option value="1"> 1 AM</option>
+												<option value="2"> 2 AM</option>
+												<option value="3"> 3 AM</option>
+												<option value="4"> 4 AM</option>
+												<option value="5"> 5 AM</option>
+												<option value="6"> 6 AM</option>
+												<option value="7"> 7 AM</option>
+												<option value="8"> 8 AM</option>
+												<option value="9"> 9 AM</option>
+												<option value="10">10 AM</option>
+												<option value="11">11 AM</option>
+												<option value="12">12 PM</option>
+												<option value="13"> 1 PM</option>
+												<option value="14"> 2 PM</option>
+												<option value="15" selected="selected"> 3 PM</option>
+												<option value="16"> 4 PM</option>
+												<option value="17"> 5 PM</option>
+												<option value="18"> 6 PM</option>
+												<option value="19"> 7 PM</option>
+												<option value="20"> 8 PM</option>
+												<option value="21"> 9 PM</option>
+												<option value="22">10 PM</option>
+												<option value="23">11 PM</option>
+											</select>				  
+										</div>
+										
+										<button type="submit" class="btn btn-default">Submit</button>
+				  					</form>
+
+								</li>
+							</ul>
+						</li>
+
+						
+						<li><a href="../navbar-static-top/">Presentation</a></li>
+						<li class="active"><a href="./">Github<span class="sr-only">(current)</span></a></li>
 					</ul>
-				</div>
+					
+				</div><!--/.nav-collapse -->
 			</div>
 		</nav>
 
-		<br><br>
-		
-		<div class="container">
 
-			<div class="starter-template">
-				<h1><strong>Dog.Meetup</strong></h1>
-				<h2>App to find the best dog meetup location/time.</h2>
-				<h3>Your address</h3>
+	<br><br>
+	
+	<div class="container">
 
-					<form action="/map" method="GET">
-						<div class="form-group">
-							<input type="text" id="address" size="50" name='address'
-								   id="address"
-								   placeholder="Your address">
+	  <div class="starter-template">
+		<h1><strong>Dog.Meetup</strong></h1>
+		<h2>App to find the best dog meetup location/time.</h2>
+		<h3>Your address</h3>
 
-							<h3>within:</h3>
-							<input type="number" id="distance" size="5"
-								   name='distance' value="5" 
-								   placeholder="5" min="1"> <div id="km">km</div>
-							
-							<h3>Time:</h3>
-							<select class="input-small" id="time" name="time">
-								<option value="0">12 AM</option>
-								<option value="1"> 1 AM</option>
-								<option value="2"> 2 AM</option>
-								<option value="3"> 3 AM</option>
-								<option value="4"> 4 AM</option>
-								<option value="5"> 5 AM</option>
-								<option value="6"> 6 AM</option>
-								<option value="7"> 7 AM</option>
-								<option value="8"> 8 AM</option>
-								<option value="9"> 9 AM</option>
-								<option value="10">10 AM</option>
-								<option value="11">11 AM</option>
-								<option value="12">12 PM</option>
-								<option value="13"> 1 PM</option>
-								<option value="14"> 2 PM</option>
-								<option value="15" selected="selected"> 3 PM</option>
-								<option value="16"> 4 PM</option>
-								<option value="17"> 5 PM</option>
-								<option value="18"> 6 PM</option>
-								<option value="19"> 7 PM</option>
-								<option value="20"> 8 PM</option>
-								<option value="21"> 9 PM</option>
-								<option value="22">10 PM</option>
-								<option value="23">11 PM</option>
-							</select>
-							
+		<form action="/map" method="GET">
+		  <div class="form-group">
+			<!-- <input type="text" id="address" size="50" name='address' -->
+						<!-- 	   id="address" -->
+						<!-- 	   placeholder="Your address"> -->
+
+
+						<div class="row"> 
+						  <div class="col-lg-3"></div>
+						  <div class="col-lg-6"> 
+							<input type="text"
+								   class="form-control"
+								   placeholder="Golden Gate Park, San Francisco"
+								   name="address"
+								   id="address">
+						  </div>
+						  <div class="col-lg-3"></div>
+						</div> <!-- row -->
+						
+						<h3>within:</h3>
+
+						<div class="row">
+						  <div class="col-lg-5"></div>
+						  <div class="col-lg-2">
+							<div class="input-group">
+							  <input type="number"
+									 class="form-control"
+									 placeholder="5"
+									 aria-describedby="basic-addon2"
+									 min="1" max="25"
+									 name="distance"
+									 id="distance">
+							  <span class="input-group-addon"
+									id="basic-addon2">
+								km
+							  </span>
+							</div>
+						  </div>						
+						  <div class="col-lg-5"></div>
 						</div>
 						
-						<div>
-							<button type="submit" id="submit"
-									class="btn btn-default btn-lg">
-								Find dogs around your area!
-							</button>
-						</div>
+						<h3>Time:</h3>
+						<select class="input-small" id="time" name="time">
+						  <option value="0">12 AM</option>
+						  <option value="1"> 1 AM</option>
+						  <option value="2"> 2 AM</option>
+						  <option value="3"> 3 AM</option>
+						  <option value="4"> 4 AM</option>
+						  <option value="5"> 5 AM</option>
+						  <option value="6"> 6 AM</option>
+						  <option value="7"> 7 AM</option>
+						  <option value="8"> 8 AM</option>
+						  <option value="9"> 9 AM</option>
+						  <option value="10">10 AM</option>
+						  <option value="11">11 AM</option>
+						  <option value="12">12 PM</option>
+						  <option value="13"> 1 PM</option>
+						  <option value="14"> 2 PM</option>
+						  <option value="15" selected="selected"> 3 PM</option>
+						  <option value="16"> 4 PM</option>
+						  <option value="17"> 5 PM</option>
+						  <option value="18"> 6 PM</option>
+						  <option value="19"> 7 PM</option>
+						  <option value="20"> 8 PM</option>
+						  <option value="21"> 9 PM</option>
+						  <option value="22">10 PM</option>
+						  <option value="23">11 PM</option>
+						</select>
+						
+		  </div>
+		  
+		  <div>
+			<button type="submit" id="submit"
+					class="btn btn-default btn-lg">
+			  Find dogs around your area!
+			</button>
+		  </div>
 
-					</form>
-				
-
-			</div>
-
-			
-			<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
-			<script src="static/js/bootstrap.min.js"></script>
-
-		</div> <!-- /.container-->
-
-		<!-- 		Geocoder -->
-		<!-- <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA&signed_in=true"></script> -->
-		<!-- <script>
-			 
-			 var geocoder = new google.maps.Geocoder();
-			 document.getElementById('submit').addEventListener('click', function() {
-			 geocodeAddress(geocoder);
-			 });
-
-			 function geocodeAddress(geocoder) {
-			 var address = document.getElementById('address').value;
-			 if (address == ''){
-			 address = '260 Sheridan Ave, Palo Alto, CA 94306';
-			 }
-			 
-			 var time = document.getElementById('time').value;
-			 
-			 geocoder.geocode({'address': address}, function(results, status) {
-			 if (status === google.maps.GeocoderStatus.OK) {
-			 latlon = [results[0].geometry.location.lat(),
-			 results[0].geometry.location.lng()]
-			 console.log(latlon);
-			 
-			 $.ajax({
-			 url: "/map",
-			 data: {lat: +latlon[0],
-			 lon: +latlon[1],
-			 address: address,
-			 time: time},
-			 type: 'GET',
-			 success: function(response) {
-			 document.write(response);
-			 },
-			 error: function(error) {
-			 console.log(error);
-			 }
-			 });
-			 } else {
-			 alert('Geocode was not successful for the following reason: ' + status);
-			 }
-			 });
-			 }
-			 
-			 
-			 </script> -->
-
+		</form>
 		
-		<!-- Bootstrap core JavaScript
-			 ================================================== -->
-		<!-- Placed at the end of the document so the pages load faster -->
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-		
-		
-	</body>
+
+	  </div> <!-- starter-template -->
+
+	  <script>
+		jQuery(document).ready(function($){
+		$('select').click(function (e) {
+		e.stopPropagation();
+		});
+		});
+	  </script>
+	  
+	  <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+	  <script src="static/js/bootstrap.min.js"></script>
+
+	</div> <!-- /.container-->
+
+	
+	<!-- Bootstrap core JavaScript
+	================================================== -->
+	<!-- Placed at the end of the document so the pages load faster -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	
+	
+  </body>
 </html>

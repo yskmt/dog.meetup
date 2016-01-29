@@ -29,9 +29,27 @@ from chainer.functions import caffe
 import pandas as pd
 
 
-def cnn_dog(photo_file, idx, categories_dog, func, gpu=-1, verbose=False):
+
+def cnn_dog(photo_file, idx, categories_dog, func, gpu=-1, verbose=False,
+            save_csv=True):
 
 
+    in_size = 224
+
+    # Constant mean over spatial pixels
+    mean_image = np.ndarray((3, 256, 256), dtype=np.float32)
+    mean_image[0] = 104
+    mean_image[1] = 117
+    mean_image[2] = 123
+
+    cropwidth = 256 - in_size
+    start = cropwidth // 2
+    stop = start + in_size
+    mean_image = mean_image[:, start:stop, start:stop].copy()
+    target_shape = (256, 256)
+    output_side_length=256
+
+    
     def forward(x, t):
         y, = func(inputs={'data': x}, outputs=['loss3/classifier'],
                   disable=['loss1/ave_pool', 'loss2/ave_pool'],
@@ -73,7 +91,8 @@ def cnn_dog(photo_file, idx, categories_dog, func, gpu=-1, verbose=False):
       score=cuda.to_cpu(score.data)
     # print(score.data)
 
-    np.savetxt('photos/%d.csv' %(idx), score.data[0])
+    if save_csv:
+        np.savetxt('photos/%d.csv' %(idx), score.data[0])
     
     sd = np.argsort(score.data[0])[::-1]
 
@@ -134,81 +153,99 @@ def get_run_cnn(dbname, username, offset,
 ###############################################################################
 # initialization of the caffe model
 
+# if len(sys.argv) < 3:
+#     sys.exit()
+
+# st = int(sys.argv[1])
+# ed = int(sys.argv[2])
+
+# print ('start', st)
+# print ('end', ed)
+
 categories = np.loadtxt("labels_dog.txt", str, delimiter="\t")
 categories_dog = [i for i in range(len(categories)) if 'dog' in categories[i]][:-2]
 
-model = 'bvlc_googlenet.caffemodel'
-do_db = False
-download = False
-gpu = -1
+# model = 'bvlc_googlenet.caffemodel'
+# do_db = False
+# download = False
+# gpu = -1
 
-print('Loading Caffe model file %s...' % model, file=sys.stderr)
-try:
-    func
-except NameError:
-    func = caffe.CaffeFunction(model)
-print('Loaded', file=sys.stderr)
+# print('Loading Caffe model file %s...' % model, file=sys.stderr)
+# try:
+#     func
+# except NameError:
+#     func = caffe.CaffeFunction(model)
+# print('Loaded', file=sys.stderr)
 
-in_size = 224
-
-# Constant mean over spatial pixels
-mean_image = np.ndarray((3, 256, 256), dtype=np.float32)
-mean_image[0] = 104
-mean_image[1] = 117
-mean_image[2] = 123
-
-cropwidth = 256 - in_size
-start = cropwidth // 2
-stop = start + in_size
-mean_image = mean_image[:, start:stop, start:stop].copy()
-target_shape = (256, 256)
-output_side_length=256
 
 ###############################################################################
 # run cnn
 
-dbname = 'photo_db'
-username = 'ysakamoto'
+# dbname = 'photo_db'
+# username = 'ysakamoto'
 
-limit = 10
+# limit = 10
 
-# get the total number of photos
-con = None
-con = psycopg2.connect(database=dbname, user=username)
-sql_query = """
-SELECT COUNT(id)
-FROM photo_data_table
-"""
-n_photos = pd.read_sql_query(sql_query,con).values[0][0]
-con.close()
+# # get the total number of photos
+# con = None
+# con = psycopg2.connect(database=dbname, user=username)
+# sql_query = """
+# SELECT COUNT(id)
+# FROM photo_data_table
+# """
+# n_photos = pd.read_sql_query(sql_query,con).values[0][0]
+# con.close()
 
-
-for i in tqdm(xrange(110, n_photos/limit+1)):
-    get_run_cnn(dbname, username, i*limit, categories_dog, func, limit)
+# for i in tqdm(xrange(st, min(ed, n_photos/limit+1))):
+#     get_run_cnn(dbname, username, i*limit, categories_dog, func, limit)
 
 
 ###############################################################################
-# # postprocessing
-# scores = []
-# for i, idx in enumerate(photo_popular.index):
-#     scores.append(np.loadtxt('photos/%d.csv' %(idx)))
-# scores = np.array(scores).T
+# postprocessing
+
+dog = []
+top_k = 20
+ct = 0
+score_vectors = {}
+
+for f in tqdm(os.listdir('photos')):
+    if ct >100:
+        break
+    ct+=1
+    
+    if 'csv' not in f:
+        continue
+    
+    id = f.split('.')[0]
+    score_top = np.where(np.argsort(np.loadtxt('photos/'+f))>980)[0]
+
+    score_vectors[int(f.split('.')[0])] = (np.loadtxt('photos/'+f))
+    
+    # check if the top 20 labels have dog-relate ones
+    flg = 0
+    for n in categories_dog:
+        if n in score_top:
+            dog.append(1)
+            flg = 1
+            break
+
+    if flg==0:
+        dog.append(0)
+
+df_dog = pd.DataFrame(score_vectors).transpose()
+df_dog['dog'] = dog
+
+# save the dog scores to database
+
+dbname = 'photo_db'
+username = 'ysakamoto'
+
+engine = create_engine('postgres://%s@localhost/%s'%(username,dbname))
+print(engine.url)
 
 
-# dogs = []
-# not_dogs = []
-# for i, idx in enumerate(photo_popular.index):
-#     nd = 1
-#     for lb in np.argsort(scores[:,i])[::-1][:20]:
+df_dog.to_sql('dog_data_table', engine, if_exists='append')
         
-#         if lb in categories_dog:
-#             dogs.append(idx)
-#             nd = 0
-#             break
-
-#     if nd:
-#         not_dogs.append(idx)
-
 # from PIL import Image
 
 # img_name = 'test/5862419122.jpg'
