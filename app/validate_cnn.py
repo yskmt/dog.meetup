@@ -256,7 +256,7 @@ from sklearn.metrics import roc_curve, auc
 y_score = dog.values() + not_dog.values()
 y_test = [1] * len(dog) + [0]*len(not_dog)
 
-fpr, tpr, _ = roc_curve(y_test, y_score)
+fpr, tpr, threshold = roc_curve(y_test, y_score)
 roc_auc = auc(fpr, tpr)
 
 import matplotlib.pyplot as plt
@@ -271,3 +271,9 @@ plt.ylabel('True Positive Rate')
 plt.title('Receiver operating characteristic example')
 plt.legend(loc="lower right")
 plt.show()
+
+th_use = 0.85
+print th_use
+print threshold[tpr>th_use][0]
+print fpr[tpr>th_use][0]
+

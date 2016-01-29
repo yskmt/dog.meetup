@@ -1,3 +1,5 @@
+import pdb
+
 from flask import render_template, jsonify, g
 from app import app
 from sqlalchemy import create_engine
@@ -25,6 +27,23 @@ default_address = 'Golden Gate Park, San Francisco'
 username = 'ysakamoto'
 hostname = 'localhost'
 dbname = 'aws_db'
+
+# global: googlenet categoreis of dog breeds
+categories_dog = [151, 152, 153, 154, 155, 156, 157, 158, 159, 160,
+                  161, 162, 163, 164, 165, 166, 167, 168, 169, 170,
+                  171, 172, 173, 174, 175, 176, 177, 178, 179, 180,
+                  181, 182, 183, 184, 185, 186, 187, 188, 189, 190,
+                  191, 192, 193, 194, 195, 196, 197, 198, 199, 200,
+                  201, 202, 203, 204, 205, 206, 207, 208, 209, 210,
+                  211, 212, 213, 214, 215, 216, 217, 218, 219, 220,
+                  221, 222, 223, 224, 225, 226, 227, 228, 229, 230,
+                  231, 232, 233, 234, 235, 236, 237, 238, 239, 240,
+                  241, 242, 243, 244, 245, 246, 247, 248, 249, 250,
+                  251, 252, 253, 254, 255, 256, 257, 258, 259, 260,
+                  261, 262, 263, 264, 265, 266, 267, 268, 269, 270,
+                  271, 272, 273, 274, 275]
+# threshold probability to identify dog for googlenet
+th_use = 0.85
 
 engine = create_engine('postgres://%s@%s/%s'
                        %(username,hostname,dbname))
@@ -122,15 +141,15 @@ def map_output():
     #            tag='dog', hour=query_time)
 
     sql_query = """
-SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t,url_m,dog
+SELECT DISTINCT latitude,longitude,datetaken,description,tags,url_t,dog_data_table.*
 FROM dog_data_table 
 INNER JOIN photo_data_table 
 ON (dog_data_table.index = photo_data_table.id)
 WHERE photo_data_table.latitude > {lat_min} 
 AND photo_data_table.latitude < {lat_max} 
 AND photo_data_table.longitude > {lon_min} 
-AND photo_data_table.longitude < {lon_max}
-AND dog = 1;"""\
+AND photo_data_table.longitude < {lon_max};
+"""\
     .format(lat_min=sbox[1], lat_max=sbox[3],
             lon_min=sbox[0], lon_max=sbox[2])
     
@@ -143,6 +162,10 @@ AND dog = 1;"""\
 #            lon_min=sbox[0], lon_max=sbox[2])
 
     query_results = pd.read_sql_query(sql_query, con)
+    dog_proba = query_results[map(str, categories_dog)].sum(axis=1)
+
+    # filter non-dogs
+    query_results = query_results[dog_proba>0.85]
 
     # convert latlon to xy coordinate in km
     xy = query_results[['latitude', 'longitude']]\
@@ -180,16 +203,16 @@ AND dog = 1;"""\
                                center=query_latlon)
     
     # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html
-    labels = DBSCAN(eps=0.3, metric='euclidean', min_samples=5,
-                    random_state=0)\
+    labels = DBSCAN(eps=0.3, metric='euclidean', min_samples=5)\
                     .fit_predict(xyh)
                     # .fit_predict(xy[['x','y']])
                         
     # add labels to dataframe
-    query_results = pd.concat([query_results,
-                               pd.DataFrame(labels, columns=['label'])],
-                              axis=1)
-
+    query_results = pd.concat(
+        [query_results,
+         pd.DataFrame(labels, columns=['label'], index=query_results.index)],
+        axis=1)
+    
     # drop -1 clusters
     query_results = query_results[query_results['label']!=-1]
 
@@ -212,8 +235,6 @@ AND dog = 1;"""\
     # KDE
     kde = KernelDensity(bandwidth=0.2,
                         kernel='gaussian', algorithm='ball_tree')
-    # kde = GMM(n_components=10, covariance_type='full')
-    
     kde.fit(query_results[['x','y','hour']])
 
     kde_score = np.exp(kde.score_samples(query_results[['x','y','hour']]))

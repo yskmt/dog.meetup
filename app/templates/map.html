@@ -479,15 +479,20 @@
 
 				 markers.push(circle);
 
-				 var contentstring = "<p>" + d["description"] + "<\p>"
-								   + "<p><div class=\"tags\">"
-								   + d["tags"] + "</div><\p>"
-								   + "<a href=\""+ d["url_m"] + "\">"
-								   + "<img src=\""+ d["url_t"] + "\">"
-								   + "</a>"
-								   + "<p>" + d["datetaken"] + "</p>"
-								   + "<p>" + d["label"] + "</p>";
+				 var contentstring =  "<a href=\""+ d["url_m"] + "\">"
+									+ "<img src=\""+ d["url_t"] + "\">"
+									+ "</a>";
 
+				 /* 
+					var contentstring = "<p>" + d["description"] + "<\p>"
+					+ "<p><div class=\"tags\">"
+					+ d["tags"] + "</div><\p>"
+					+ "<a href=\""+ d["url_m"] + "\">"
+					+ "<img src=\""+ d["url_t"] + "\">"
+					+ "</a>"
+					+ "<p>" + d["datetaken"] + "</p>"
+					+ "<p>" + d["label"] + "</p>";
+				  */
 				 circle.addListener('click', function() {
 					 infowindow.setContent(contentstring);
 					 infowindow.open(map, circle);						 						 
