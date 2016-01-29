@@ -7,12 +7,9 @@ import psycopg2
 from flask import request
 
 import numpy as np
-from sklearn.cluster import DBSCAN, KMeans, AgglomerativeClustering
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.cluster import DBSCAN
 from sklearn.metrics import silhouette_score
 from sklearn.neighbors import KernelDensity
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.mixture import GMM
 from sklearn.externals import joblib
 
 from datetime import datetime
@@ -21,8 +18,6 @@ from tempfile import NamedTemporaryFile
 from geopy.geocoders import Nominatim, GoogleV3 
 
 from app.cluster_photos import latlon_to_dist, get_bbox
-
-from utils import get_ellipse_coords
 
 
 default_address = 'Golden Gate Park, San Francisco'
@@ -246,7 +241,7 @@ AND dog = 1;"""\
     query_results = query_results[hours==query_time]
 
     # drop small-element cluster after sliced by an hour
-    min_cluster = 0
+    min_cluster = 5
     idx_preserve = (query_results.groupby('label')['label'].count()>min_cluster)
     idx_preserve = idx_preserve[idx_preserve==True]
     query_results = query_results[query_results.label.isin(idx_preserve.index)]

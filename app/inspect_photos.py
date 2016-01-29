@@ -29,9 +29,27 @@ from chainer.functions import caffe
 import pandas as pd
 
 
+
 def cnn_dog(photo_file, idx, categories_dog, func, gpu=-1, verbose=False,
             save_csv=True):
 
+
+    in_size = 224
+
+    # Constant mean over spatial pixels
+    mean_image = np.ndarray((3, 256, 256), dtype=np.float32)
+    mean_image[0] = 104
+    mean_image[1] = 117
+    mean_image[2] = 123
+
+    cropwidth = 256 - in_size
+    start = cropwidth // 2
+    stop = start + in_size
+    mean_image = mean_image[:, start:stop, start:stop].copy()
+    target_shape = (256, 256)
+    output_side_length=256
+
+    
     def forward(x, t):
         y, = func(inputs={'data': x}, outputs=['loss3/classifier'],
                   disable=['loss1/ave_pool', 'loss2/ave_pool'],
@@ -159,20 +177,6 @@ categories_dog = [i for i in range(len(categories)) if 'dog' in categories[i]][:
 #     func = caffe.CaffeFunction(model)
 # print('Loaded', file=sys.stderr)
 
-# in_size = 224
-
-# # Constant mean over spatial pixels
-# mean_image = np.ndarray((3, 256, 256), dtype=np.float32)
-# mean_image[0] = 104
-# mean_image[1] = 117
-# mean_image[2] = 123
-
-# cropwidth = 256 - in_size
-# start = cropwidth // 2
-# stop = start + in_size
-# mean_image = mean_image[:, start:stop, start:stop].copy()
-# target_shape = (256, 256)
-# output_side_length=256
 
 ###############################################################################
 # run cnn
