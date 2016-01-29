@@ -141,10 +141,11 @@ def map_output():
     #            tag='dog', hour=query_time)
 
     sql_query = """
-SELECT DISTINCT latitude,longitude,datetaken,description,tags,url_t,dog_data_table.*
-FROM dog_data_table 
+SELECT DISTINCT photo_data_table.id,latitude,longitude,datetaken,
+description,tags,url_t,dog_proba
+FROM dog_proba_table 
 INNER JOIN photo_data_table 
-ON (dog_data_table.index = photo_data_table.id)
+ON (dog_proba_table.index = photo_data_table.id)
 WHERE photo_data_table.latitude > {lat_min} 
 AND photo_data_table.latitude < {lat_max} 
 AND photo_data_table.longitude > {lon_min} 

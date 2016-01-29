@@ -208,14 +208,14 @@ top_k = 20
 ct = 0
 
 for f in tqdm(os.listdir('photos')):
-    if ct >100:
-        break
-    ct+=1
+    # if ct >100:
+    #     break
+    # ct+=1
     
     if 'csv' not in f:
         continue
     
-    id = f.split('.')[0]
+    id = int(f.split('.')[0])
     dog[id] = (np.sum(np.loadtxt('photos/'+f)[categories_dog]))
 
 df_dog = pd.DataFrame(dog.values(), index=dog.keys(), columns=['dog_proba'])
@@ -228,7 +228,7 @@ username = 'ubuntu'
 engine = create_engine('postgres://%s@/%s'%(username,dbname))
 print(engine.url)
 
-df_dog.to_sql('dog_proba_table', engine, if_exists='append')
+df_dog.to_sql('dog_proba_table', engine, if_exists='replace')
         
 # from PIL import Image
 
