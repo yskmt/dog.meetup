@@ -24,7 +24,7 @@ from app.cluster_photos import latlon_to_dist, get_bbox
 
 default_address = 'Golden Gate Park, San Francisco'
 
-username = 'ubuntu'
+username = 'ysakamoto'
 hostname = 'localhost'
 dbname = 'photo_db'
 
