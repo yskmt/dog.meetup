@@ -317,7 +317,6 @@ if __name__ == "__main__":
     plt.savefig('dow.png')
     plt.show()
 
-
     # sunday is 0
     day_counts = []
     photo_data_from_sql = []
@@ -330,7 +329,7 @@ if __name__ == "__main__":
         WHERE datetaken >= '{day}'::date
         AND datetaken < ('{day}'::date + '1 day'::interval);
 
-        """.format(day='09-%02d-11' %i)
+        """.format(day='10-%02d-11' %i)
         photo_data_from_sql.append(pd.read_sql_query(sql_query,con))
         # print 'hour: ', i, photo_data_from_sql.shape[0], 'hits'
 
@@ -338,7 +337,6 @@ if __name__ == "__main__":
 
     plt.plot(day_counts, '-o')
     plt.show()
-
 
     hour_counts = []
     for j in range(7):
@@ -377,7 +375,11 @@ if __name__ == "__main__":
 
         month_counts.append(photo_data_from_sql.shape[0])
 
-    plt.plot(range(1,13), month_counts, '-o')
+    plt.figure(figsize=(5,5))        
+    plt.plot(range(1,13), month_counts, '-o', linewidth=2, c=sb.color_palette()[1])
+    plt.xlim([1, 12])
+    plt.tight_layout()
+    plt.savefig('month.png')        
     plt.show()
 
 
@@ -404,21 +406,79 @@ if __name__ == "__main__":
     #         print 'url('+ popu[i*10+j] +') ' + str(i*100) +'px '+ str(j*100) + 'px no-repeat,' 
 
 
-    import Image
+    # import Image
 
-    #opens an image:
-    im = Image.open("1_tree.jpg")
-    #creates a new empty image, RGB mode, and size 400 by 400.
-    new_im = Image.new('RGB', (400,400))
+    # #opens an image:
+    # im = Image.open("1_tree.jpg")
+    # #creates a new empty image, RGB mode, and size 400 by 400.
+    # new_im = Image.new('RGB', (400,400))
 
-    #Here I resize my opened image, so it is no bigger than 100,100
-    im.thumbnail((100,100))
-    #Iterate through a 4 by 4 grid with 100 spacing, to place my image
-    for i in xrange(0,500,100):
-        for j in xrange(0,500,100):
-            #I change brightness of the images, just to emphasise they are unique copies.
-            im=Image.eval(im,lambda x: x+(i+j)/30)
-            #paste the image at location i,j:
-            new_im.paste(im, (i,j))
+    # #Here I resize my opened image, so it is no bigger than 100,100
+    # im.thumbnail((100,100))
+    # #Iterate through a 4 by 4 grid with 100 spacing, to place my image
+    # for i in xrange(0,500,100):
+    #     for j in xrange(0,500,100):
+    #         #I change brightness of the images, just to emphasise they are unique copies.
+    #         im=Image.eval(im,lambda x: x+(i+j)/30)
+    #         #paste the image at location i,j:
+    #         new_im.paste(im, (i,j))
 
-    new_im.show()
+    # new_im.show()
+
+
+
+
+
+# sunday is 0
+day_counts = []
+photo_data_from_sql = []
+for i in range(1, 31):
+
+    sql_query = """
+    SELECT DISTINCT id,latitude,longitude,description,tags,url_t 
+    FROM photo_data_table
+
+    WHERE datetaken >= '{day}'::date
+    AND datetaken < ('{day}'::date + '1 day'::interval)
+    AND latitude > {lat_min} AND latitude < {lat_max} 
+    AND longitude > {lon_min} AND longitude < {lon_max};
+    """.format(day='10-%02d-11' %i, lon_min=-74.3, lat_min=40.5,
+               lon_max=-73.64,lat_max=40.94)
+    photo_data_from_sql.append(pd.read_sql_query(sql_query,con))
+    # print 'hour: ', i, photo_data_from_sql.shape[0], 'hits'
+
+    day_counts.append(photo_data_from_sql[i-1].shape[0])
+
+    
+plt.figure(figsize=(5,5))
+plt.plot(range(1,31), day_counts, '-o', linewidth=2, c=sb.color_palette()[2])
+plt.xlim([1,31])
+plt.tight_layout()
+plt.savefig('10-11-nyc.png')
+plt.show()
+
+
+
+sql_query = """
+SELECT DISTINCT id,latitude,longitude,description,tags,url_m,views
+FROM photo_data_table
+
+WHERE datetaken >= '{day}'::date
+AND datetaken < ('{day}'::date + '1 day'::interval)
+AND latitude > {lat_min} AND latitude < {lat_max} 
+AND longitude > {lon_min} AND longitude < {lon_max}
+ORDER BY views;
+""".format(day='10-%02d-11' %22, lon_min=-74.3, lat_min=40.5, lon_max=-73.64,lat_max=40.94)
+photos = pd.read_sql_query(sql_query,con)
+# print 'hour: ', i, photo_data_from_sql.shape[0], 'hits'
+
+
+import os
+import urllib
+
+for url in photos['url_m']:
+    print url
+    photo_name = url, '10-22/%s' %(url.split('/')[-1])
+
+    if not os.path.exists(photo_name[1]):
+        urllib.urlretrieve(*photo_name)

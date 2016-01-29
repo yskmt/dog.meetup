@@ -260,20 +260,28 @@ fpr, tpr, threshold = roc_curve(y_test, y_score)
 roc_auc = auc(fpr, tpr)
 
 import matplotlib.pyplot as plt
+import seaborn as sb
 
-plt.figure()
-plt.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc)
-plt.plot([0, 1], [0, 1], 'k--')
+plt.figure(figsize=(5,5))
+plt.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc, linewidth=2)
+plt.plot([0, 1], [0, 1], 'k--', linewidth=2)
 plt.xlim([0.0, 1.0])
 plt.ylim([0.0, 1.05])
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title('Receiver operating characteristic example')
-plt.legend(loc="lower right")
+plt.xlabel('False Positive Rate', fontsize=15)
+plt.ylabel('True Positive Rate', fontsize=15)
+plt.title('Receiver operating characteristic', fontsize=15)
+plt.legend(loc="lower right", fontsize=15)
+plt.savefig('roc.png')
 plt.show()
 
 th_use = 0.85
 print th_use
 print threshold[tpr>th_use][0]
 print fpr[tpr>th_use][0]
+
+
+df_val = pd.DataFrame([y_score, y_test]).transpose()
+df_val.columns = ['pred', 'test']
+df_val.to_csv('random/validation.csv')
+
 
