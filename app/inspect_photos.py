@@ -203,10 +203,9 @@ categories_dog = [i for i in range(len(categories)) if 'dog' in categories[i]][:
 ###############################################################################
 # postprocessing
 
-dog = []
+dog = {}
 top_k = 20
 ct = 0
-score_vectors = {}
 
 for f in tqdm(os.listdir('photos')):
     if ct >100:
@@ -217,45 +216,31 @@ for f in tqdm(os.listdir('photos')):
         continue
     
     id = f.split('.')[0]
-    score_top = np.where(np.argsort(np.loadtxt('photos/'+f))>980)[0]
+    dog[id] = (np.sum(np.loadtxt('photos/'+f)[categories_dog]))
 
-    score_vectors[int(f.split('.')[0])] = (np.loadtxt('photos/'+f))
-    
-    # check if the top 20 labels have dog-relate ones
-    flg = 0
-    for n in categories_dog:
-        if n in score_top:
-            dog.append(1)
-            flg = 1
-            break
+df_dog = pd.DataFrame(dog.values(), index=dog.keys(), columns=['dog_proba'])
 
-    if flg==0:
-        dog.append(0)
+# # save the dog scores to database
 
-df_dog = pd.DataFrame(score_vectors).transpose()
-df_dog['dog'] = dog
+# dbname = 'photo_db'
+# username = 'ysakamoto'
 
-# save the dog scores to database
-
-dbname = 'photo_db'
-username = 'ysakamoto'
-
-engine = create_engine('postgres://%s@localhost/%s'%(username,dbname))
-print(engine.url)
+# engine = create_engine('postgres://%s@localhost/%s'%(username,dbname))
+# print(engine.url)
 
 
-df_dog.to_sql('dog_data_table', engine, if_exists='append')
+# df_dog.to_sql('dog_data_table', engine, if_exists='append')
         
-# from PIL import Image
+# # from PIL import Image
 
-# img_name = 'test/5862419122.jpg'
+# # img_name = 'test/5862419122.jpg'
 
-# cnn_dog(img_name, 0, categories_dog, verbose=True)
-# image = Image.open(img_name)
-# image.show()
+# # cnn_dog(img_name, 0, categories_dog, verbose=True)
+# # image = Image.open(img_name)
+# # image.show()
 
 
-# # for nd in not_dogs:
-# #     image = Image.open('photos/%d.jpg' %nd)
-# #     image.show()
+# # # for nd in not_dogs:
+# # #     image = Image.open('photos/%d.jpg' %nd)
+# # #     image.show()
 
