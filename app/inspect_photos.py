@@ -203,48 +203,32 @@ categories_dog = [i for i in range(len(categories)) if 'dog' in categories[i]][:
 ###############################################################################
 # postprocessing
 
-dog = []
+dog = {}
 top_k = 20
 ct = 0
-score_vectors = {}
 
 for f in tqdm(os.listdir('photos')):
-    if ct >100:
-        break
-    ct+=1
+    # if ct >100:
+    #     break
+    # ct+=1
     
     if 'csv' not in f:
         continue
     
-    id = f.split('.')[0]
-    score_top = np.where(np.argsort(np.loadtxt('photos/'+f))>980)[0]
+    id = int(f.split('.')[0])
+    dog[id] = (np.sum(np.loadtxt('photos/'+f)[categories_dog]))
 
-    score_vectors[int(f.split('.')[0])] = (np.loadtxt('photos/'+f))
-    
-    # check if the top 20 labels have dog-relate ones
-    flg = 0
-    for n in categories_dog:
-        if n in score_top:
-            dog.append(1)
-            flg = 1
-            break
-
-    if flg==0:
-        dog.append(0)
-
-df_dog = pd.DataFrame(score_vectors).transpose()
-df_dog['dog'] = dog
+df_dog = pd.DataFrame(dog.values(), index=dog.keys(), columns=['dog_proba'])
 
 # save the dog scores to database
 
 dbname = 'photo_db'
-username = 'ysakamoto'
+username = 'ubuntu'
 
-engine = create_engine('postgres://%s@localhost/%s'%(username,dbname))
+engine = create_engine('postgres://%s@/%s'%(username,dbname))
 print(engine.url)
 
-
-df_dog.to_sql('dog_data_table', engine, if_exists='append')
+df_dog.to_sql('dog_proba_table', engine, if_exists='replace')
         
 # from PIL import Image
 

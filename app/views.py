@@ -24,9 +24,9 @@ from app.cluster_photos import latlon_to_dist, get_bbox
 
 default_address = 'Golden Gate Park, San Francisco'
 
-username = 'ysakamoto'
+username = 'ubuntu'
 hostname = 'localhost'
-dbname = 'aws_db'
+dbname = 'photo_db'
 
 # global: googlenet categoreis of dog breeds
 categories_dog = [151, 152, 153, 154, 155, 156, 157, 158, 159, 160,
@@ -141,10 +141,11 @@ def map_output():
     #            tag='dog', hour=query_time)
 
     sql_query = """
-SELECT DISTINCT latitude,longitude,datetaken,description,tags,url_t,dog_data_table.*
-FROM dog_data_table 
+SELECT DISTINCT photo_data_table.id,latitude,longitude,datetaken,
+description,tags,url_t,dog_proba
+FROM dog_proba_table 
 INNER JOIN photo_data_table 
-ON (dog_data_table.index = photo_data_table.id)
+ON (dog_proba_table.index = photo_data_table.id)
 WHERE photo_data_table.latitude > {lat_min} 
 AND photo_data_table.latitude < {lat_max} 
 AND photo_data_table.longitude > {lon_min} 
@@ -162,10 +163,12 @@ AND photo_data_table.longitude < {lon_max};
 #            lon_min=sbox[0], lon_max=sbox[2])
 
     query_results = pd.read_sql_query(sql_query, con)
-    dog_proba = query_results[map(str, categories_dog)].sum(axis=1)
+    # dog_proba = query_results[map(str, categories_dog)].sum(axis=1)
 
     # filter non-dogs
-    query_results = query_results[dog_proba>0.85]
+    query_results = query_results[query_results['dog_proba']>0.85]
+
+    print query_results
 
     # convert latlon to xy coordinate in km
     xy = query_results[['latitude', 'longitude']]\
