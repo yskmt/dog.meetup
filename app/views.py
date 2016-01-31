@@ -168,8 +168,6 @@ AND photo_data_table.longitude < {lon_max};
     # filter non-dogs
     query_results = query_results[query_results['dog_proba']>0.85]
 
-    print query_results
-
     # convert latlon to xy coordinate in km
     xy = query_results[['latitude', 'longitude']]\
          .apply(lambda x: latlon_to_dist(x, query_latlon), axis=1)
@@ -236,7 +234,7 @@ AND photo_data_table.longitude < {lon_max};
 
         
     # KDE
-    kde = KernelDensity(bandwidth=0.2,
+    kde = KernelDensity(bandwidth=0.4,
                         kernel='gaussian', algorithm='ball_tree')
     kde.fit(query_results[['x','y','hour']])
 
