@@ -5,7 +5,7 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 
-		<meta name="description" content="Dog.Meetup: Dog meetup app">
+		<meta name="description" content="DogMeetup: Dog meetup app">
 		<meta name="author" content="Yusuke Sakamoto">
 		<link rel="icon" href="../../favicon.ico">
 
@@ -22,7 +22,7 @@
 		<!-- <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/boot<\!-- strap.min.css"> -\-> -->
 		<!-- <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap-theme.min.css"> -->
 		
-		<title>Dog.Meetup</title>
+		<title>DogMeetup</title>
 
 		<!-- <link href="../static/css/bootstrap.min.css" rel="stylesheet"> -->
 
@@ -52,7 +52,7 @@
 						<span class="icon-bar"></span>
 						<span class="icon-bar"></span>
 					</button>
-					<a class="navbar-brand" href="/">Dog.Meetup</a>
+					<a class="navbar-brand" href="/">DogMeetup</a>
 				</div>
 				
 				<div id="navbar" class="navbar-collapse collapse">
@@ -125,8 +125,8 @@
 						</li>
 
 						
-						<li><a href="../navbar-static-top/">Presentation</a></li>
-						<li class="active"><a href="./">Github<span class="sr-only">(current)</span></a></li>
+						<li><a href="{{ url_for('static', filename='demo.pdf') }}">Presentation</a></li>
+						<li class="active"><a href="https://github.com/yskmt/dog.meetup">Github<span class="sr-only">(current)</span></a></li>
 					</ul>
 					
 				</div><!--/.nav-collapse -->
@@ -370,8 +370,23 @@
 					 ]
 				 }
 			 ];
-
-			 /* 
+<!-- var styles = [ -->
+<!--               {featureType: 'poi.attraction', -->
+<!--                stylers: [{color: '#fce8b2'}] -->
+<!--               }, -->
+<!--               {featureType: 'road.highway', -->
+<!--                stylers: [{hue: '#0277bd'}, {saturation: -50}] -->
+<!--               }, -->
+<!--               {featureType: 'road.highway', -->
+<!--                elementType: 'labels.icon', -->
+<!--                stylers: [{hue: '#000'}, {saturation: 100}, {lightness: 50}] -->
+<!--               }, -->
+<!--               {featureType: 'landscape', -->
+<!--                stylers: [{hue: '#259b24'}, {saturation: 10}, {lightness: -22}] -->
+<!--               } -->
+<!--         ]; -->
+	
+		 /* 
 				$('div#map').attr("width", $("div.container").width());
 				$('div#map').attr("height", $("div.container").width()); */
 
