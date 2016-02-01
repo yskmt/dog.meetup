@@ -460,7 +460,7 @@ plt.show()
 
 
 sql_query = """
-SELECT DISTINCT id,latitude,longitude,description,tags,url_m,views
+SELECT DISTINCT *
 FROM photo_data_table
 
 WHERE datetaken >= '{day}'::date
@@ -473,12 +473,15 @@ photos = pd.read_sql_query(sql_query,con)
 # print 'hour: ', i, photo_data_from_sql.shape[0], 'hits'
 
 
-import os
-import urllib
-
-for url in photos['url_m']:
+for url in photos['url_s']:
     print url
     photo_name = url, '10-22/%s' %(url.split('/')[-1])
 
     if not os.path.exists(photo_name[1]):
         urllib.urlretrieve(*photo_name)
+
+
+# for i in range(20):
+#     for j in range(20):
+#         print 'url('+ popu[i*10+j] +') ' + str(i*100) +'px '+ str(j*100) + 'px no-repeat,' 
+
