@@ -142,7 +142,7 @@ def map_output():
 
     sql_query = """
 SELECT DISTINCT photo_data_table.id,latitude,longitude,datetaken,
-description,tags,url_t,dog_proba
+description,tags,url_t,url_m,dog_proba
 FROM dog_proba_table 
 INNER JOIN photo_data_table 
 ON (dog_proba_table.index = photo_data_table.id)

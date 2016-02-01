@@ -4,6 +4,23 @@ google.load('visualization', '1.0', {'packages':['corechart']});
 // Set a callback to run when the Google Visualization API is loaded.
 // google.setOnLoadCallback(drawChart);
 
+
+function getAMPM(time){
+	if (time==0){
+		return 12 + ' AM';
+	}
+	else if (time<=11){
+		return time + ' AM';
+	}
+	else if(time==12){
+		return time + ' PM';
+	}
+	else {
+		return (time%12) + ' PM';
+	}
+}
+
+
 function linspace(a,b,n) {
 	if(typeof n === "undefined") n = Math.max(Math.round(b-a)+1,1);
 	if(n<2) { return n===1?[a]:[]; }
