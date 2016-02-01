@@ -26,7 +26,7 @@ default_address = 'Golden Gate Park, San Francisco'
 
 username = 'ysakamoto'
 hostname = 'localhost'
-dbname = 'photo_db'
+dbname = 'aws_db'
 
 # global: googlenet categoreis of dog breeds
 categories_dog = [151, 152, 153, 154, 155, 156, 157, 158, 159, 160,
