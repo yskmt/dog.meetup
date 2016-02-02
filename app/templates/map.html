@@ -40,7 +40,7 @@
 	<body>
 
 		<!-- Fixed navbar -->
-		<nav class="navbar navbar-inverse">
+		<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
 			<div class="container">
 				<div class="navbar-header">
 					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
@@ -129,8 +129,13 @@
 				</div><!--/.nav-collapse -->
 			</div>
 		</nav>
+		<br><br>
 
-		<div id="map"></div>
+		<div class="container">
+			<div class="starter-template">
+				<div id="map"></div>
+			</div>
+		</div>
 		
 		<!-- render map -->
 		<script>
@@ -533,6 +538,8 @@
 		<!-- <script async defer -->
 		<!-- src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA&signed_in=true&libraries=visualization&callback=initMap"></script> -->
 
+		<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+		
 		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA&signed_in=true&libraries=visualization&extension=.js"></script>
 
 
@@ -547,6 +554,5 @@
 		<!-- Placed at the end of the document so the pages load faster -->
 		
 
-		<div class="chart"></div>
 	</body>
 </html>
