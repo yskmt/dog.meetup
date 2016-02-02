@@ -134,16 +134,29 @@
 
 	<br><br>
 	
-	<div class="container">
-
-	  <div class="starter-template">
-		<div class="highlight">
-		  <br>
-		<h1><strong>DogMeetup</strong></h1>
-</div>
+	<div class="row">
+	  <div class="col-md-2"></div>
+	  <div class="highlight">
+	    <div class="col-xs-8 col-md-8 col-md-12">
+	      <center>
+	      <h1 font-size="1.0vw"><strong>DogMeetup</strong></h1>
+	      </center>
+	    </div>
+	  </div>
+	  <div class="col-md-2"></div>
+	</div>
+	<div class="row">
+<div class="col-md-3"></div>
+<div class="col-xs-10 col-md-6"><center>
 		<h2>Find the best dog meetup location/time.</h2>
-		<h3>Your address</h3>
+</center>
 
+</div>
+<div class="col-md-3"></div>
+	</div>
+<center>
+		<h3>Your address</h3>
+</center>
 		<form action="/map" method="GET">
 		  <div class="form-group">
 			<!-- <input type="text" id="address" size="50" name='address' -->
@@ -152,22 +165,22 @@
 
 
 						<div class="row"> 
-						  <div class="col-lg-4"></div>
-						  <div class="col-lg-4"> 
+						  <div class="col-lg-4 col-xs-1"></div>
+						  <div class="col-lg-4 col-xs-10"> 
 							<input type="text"
 								   class="form-control"
 								   placeholder="Golden Gate Park, San Francisco"
 								   name="address"
 								   id="address">
 						  </div>
-						  <div class="col-lg-4"></div>
+						  <div class="col-lg-4 col-xs-1"></div>
 						</div> <!-- row -->
-						
+						<center>
 						<h3>within:</h3>
-
+</center>
 						<div class="row">
-						  <div class="col-lg-5"></div>
-						  <div class="col-lg-2">
+						  <div class="col-lg-5 col-xs-1"></div>
+						  <div class="col-lg-2 col-xs-10">
 							<div class="input-group">
 							  <input type="number"
 									 class="form-control"
@@ -182,10 +195,16 @@
 							  </span>
 							</div>
 						  </div>						
-						  <div class="col-lg-5"></div>
+						  <div class="col-lg-5 col-xs-1"></div>
 						</div>
-						
+						<center>
 						<h3>Time:</h3>
+						</center>
+
+<div class="row">
+<div class="col-xs-1"></div>
+<div class="col-xs-1 col-md-12">
+<center>
 						<select class="input-small" id="time" name="time">
 						  <option value="0">12 AM</option>
 						  <option value="1"> 1 AM</option>
@@ -212,20 +231,22 @@
 						  <option value="22">10 PM</option>
 						  <option value="23">11 PM</option>
 						</select>
+</center>
+</div>
+</div> <!-- row -->
 						
 		  </div>
 		  
-		  <div>
+		  <div><center>
 			<button type="submit" id="submit"
 					class="btn btn-default btn-lg">
 			  Find dogs around your area!
 			</button>
+		    </center>
 		  </div>
 
 		</form>
 		
-
-	  </div> <!-- starter-template -->
 
 	  <script>
 		jQuery(document).ready(function($){
@@ -236,8 +257,6 @@
 	  </script>
 	  
 	  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-
-	</div> <!-- /.container-->
 
 	
 	<!-- Bootstrap core JavaScript

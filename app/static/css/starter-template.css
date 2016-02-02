@@ -3,7 +3,7 @@ body {
     background: url(../imgs/group-dog-training.jpg) no-repeat;
     position: relative;
     background-position: bottom; /*Positioning*/
-    background-size: 100% 100%;
+    background-size: 100% auto;
 }
 
 .starter-template {
@@ -72,8 +72,7 @@ html,body {width:100%;height:100%;margin:0;padding:0;}
 
 #top-control {
 	font-size: small;
-	line-height: 100%;
-
+	line-height: 120%;
 }
 
 .navbar_foot{
@@ -82,3 +81,4 @@ html,body {width:100%;height:100%;margin:0;padding:0;}
     display: inline-block;
     float: none;
 }
+
