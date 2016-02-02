@@ -23,9 +23,9 @@ from app.cluster_photos import latlon_to_dist, get_bbox
 
 default_address = 'Golden Gate Park, San Francisco'
 
-username = 'ysakamoto'
+username = 'ubuntu'
 hostname = 'localhost'
-dbname = 'aws_db'
+dbname = 'photo_db'
 
 # global: googlenet categoreis of dog breeds
 categories_dog = [151, 152, 153, 154, 155, 156, 157, 158, 159, 160,
@@ -131,17 +131,6 @@ def map_output():
     print 'distance = ', query_distance
 
     sbox = get_bbox(query_latlon, query_distance)
-    
-    #     sql_query = """
-    # SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t 
-    # FROM photo_data_table
-    # WHERE latitude > {lat_min} AND latitude < {lat_max} 
-    # AND longitude > {lon_min} AND longitude < {lon_max}
-    # AND tags LIKE '%{tag}%' 
-    # AND DATE_PART('hour', datetaken) = {hour};
-    # """.format(lat_min=sbox[1], lat_max=sbox[3],
-    #            lon_min=sbox[0], lon_max=sbox[2],
-    #            tag='dog', hour=query_time)
 
     sql_query = """
 SELECT DISTINCT photo_data_table.id,latitude,longitude,datetaken,
@@ -156,14 +145,6 @@ AND photo_data_table.longitude < {lon_max};
 """\
     .format(lat_min=sbox[1], lat_max=sbox[3],
             lon_min=sbox[0], lon_max=sbox[2])
-    
-#     sql_query = """
-# SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t,url_m
-# FROM photo_data_table
-# WHERE latitude > {lat_min} AND latitude < {lat_max} 
-# AND longitude > {lon_min} AND longitude < {lon_max};
-# """.format(lat_min=sbox[1], lat_max=sbox[3],
-#            lon_min=sbox[0], lon_max=sbox[2])
 
     query_results = pd.read_sql_query(sql_query, con)
     # dog_proba = query_results[map(str, categories_dog)].sum(axis=1)
