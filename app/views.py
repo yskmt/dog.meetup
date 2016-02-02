@@ -63,6 +63,10 @@ def get_stars(score):
 def cesareans_input():
     return render_template("input.html")
 
+@app.route('/labels')
+def labels():
+    return render_template("labels_dog.txt")
+
 @app.route('/_add_numbers')
 def add_numbers():
     lat = request.args.get('lat', 0, type=float)

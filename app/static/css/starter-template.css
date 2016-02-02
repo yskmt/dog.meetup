@@ -1,8 +1,8 @@
 body {
     /* background: url(../background.jpg) no-repeat; */
     position: relative;
-background-size: 20%,100%;
     background-color: black;
+    /* background-size: 100% 100%; */
 }
 
 .starter-template {
