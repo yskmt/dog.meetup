@@ -10,7 +10,6 @@ from flask import request
 
 import numpy as np
 from sklearn.cluster import DBSCAN
-from sklearn.metrics import silhouette_score
 from sklearn.neighbors import KernelDensity
 from sklearn.externals import joblib
 
@@ -24,9 +23,9 @@ from app.cluster_photos import latlon_to_dist, get_bbox
 
 default_address = 'Golden Gate Park, San Francisco'
 
-username = 'ubuntu'
+username = 'ysakamoto'
 hostname = 'localhost'
-dbname = 'photo_db'
+dbname = 'aws_db'
 
 # global: googlenet categoreis of dog breeds
 categories_dog = [151, 152, 153, 154, 155, 156, 157, 158, 159, 160,
@@ -146,7 +145,7 @@ def map_output():
 
     sql_query = """
 SELECT DISTINCT photo_data_table.id,latitude,longitude,datetaken,
-description,tags,url_t,dog_proba
+description,tags,url_t,url_m,dog_proba
 FROM dog_proba_table 
 INNER JOIN photo_data_table 
 ON (dog_proba_table.index = photo_data_table.id)
@@ -350,7 +349,6 @@ AND photo_data_table.longitude < {lon_max};
 
     return render_template("map.html",
                            photos=query_results.to_dict(orient='index'),
-                           num_labels=len(set(query_results['label'])),
                            max_label=query_results['label'].max(),
                            address=query_address,
                            hour=datetime.strptime(str(query_time), "%H").strftime("%-I %p"),

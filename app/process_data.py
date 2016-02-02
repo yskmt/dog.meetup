@@ -1,10 +1,6 @@
 import pandas as pd
 
 
-
-
-
-
 sql_query = """
 SELECT DISTINCT id,latitude,longitude,datetaken,description,tags,url_t,url_m
 FROM photo_data_table

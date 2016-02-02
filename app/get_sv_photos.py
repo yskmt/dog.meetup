@@ -53,7 +53,7 @@ print(database_exists(engine.url))
 # download photo info
 
 
-nyc = [-74.3, 40.5]
+nyc = [-74.3, 40.5]  # 40.947435, -73.640211
 bb = [nyc[0], nyc[1]]
 n_lon = 5
 n_lat = 4

@@ -12,38 +12,35 @@
 		<!-- send values to javascript -->
 		<meta id="hour" data-name="{{ hour }}">
 		<meta id="hour_24" data-name="{{ hour_24 }}">
+		<meta id="address" data-name="{{ address }}">
+		<meta id="distance" data-name="{{ distance }}">
+				
 		<meta id="kde_score_max" data-name="{{ kde_score_max }}">
 		<meta id="tempfile" data-name="{{ tempfile }}">
 
-
-		<link rel="stylesheet prefetch" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-
-		
-		<!-- <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/boot<\!-- strap.min.css"> -\-> -->
-		<!-- <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap-theme.min.css"> -->
-		
+		<link rel="stylesheet prefetch" href="{{ url_for('static', filename='css/bootstrap.min.css') }}"></script>
+		<link rel="stylesheet prefetch" href="{{ url_for('static', filename='css/bootstrap-theme.min.css') }}"></script>
+				
 		<title>DogMeetup</title>
 
-		<!-- <link href="../static/css/bootstrap.min.css" rel="stylesheet"> -->
-
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+		<script src="{{ url_for('static', filename='js/jquery-1.12.0.min.js') }}"></script>
+		
 		<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
 		<script type="text/javascript" src="https://www.google.com/jsapi"></script>
 
 		
 		<script src="{{ url_for('static', filename='js/set_objects.js') }}"></script>
-		<link href="../static/css/starter-template.css"
-			  rel="stylesheet">
-		<!-- <link href="../static/css/style.css" -->
-		<!-- rel="stylesheet"> -->
+		<script src="{{ url_for('static', filename='js/map_style.js') }}"></script>
+		<script src="{{ url_for('static', filename='js/map_controls.js') }}"></script>
+
+		<link rel="stylesheet prefetch" href="{{ url_for('static', filename='css/starter-template.css') }}"></script>
 		
 	</head>
 
 	<body>
 
-
 		<!-- Fixed navbar -->
-		<nav class="navbar navbar-inverse navbar-fixed-top">
+		<nav class="navbar navbar-inverse">
 			<div class="container">
 				<div class="navbar-header">
 					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
@@ -133,27 +130,11 @@
 			</div>
 		</nav>
 
-
 		<div id="map"></div>
 		
 		<!-- render map -->
 		<script>
 		 google.load('visualization', '1.0', {'packages':['corechart']});
-
-		 function getAMPM(time){
-			 if (time==0){
-				 return 12 + ' AM';
-			 }
-			 else if (time<=11){
-				 return time + ' AM';
-			 }
-			 else if(time==12){
-				 return time + ' PM';
-			 }
-			 else {
-				 return (time%12) + ' PM';
-			 }
-		 }
 		 
 		 var map;
 		 var myLatLng;  /* center of the search */
@@ -164,246 +145,29 @@
 		 var ellipses = [];
 		 var is_marker = 0; /* 0: heatmap, 1: markers, 2: cluster */
 		 var info_window_cluster;
+		 
 		 var hour = $('meta#hour').data()['name'];
 		 var hour_24 = $('meta#hour_24').data()['name'];
+		 var address = $('meta#address').data()['name'];
+		 var distance = $('meta#distance').data()['name'];
+		 
 		 var kde_score_max = $('meta#kde_score_max').data()['name'];
 		 var tempfile = $('meta#tempfile').data()['name'];
+		 
+		 var dataset = {{ photos|tojson }};
+		 var clusters = {{ cluster_shape|tojson }};
+		 var max_label = {{ max_label }};
+		 var top3 = {{ top3|tojson }};
 
-		 function CenterControl(controlDiv, map) {
-
-			 /* Set CSS for the control border. */
-			 var controlUI = document.createElement('div');
-			 controlUI.setAttribute("id", "toggleButton")
-				 controlUI.style.backgroundColor = '#fff';
-			 controlUI.style.border = '2px solid #fff';
-			 controlUI.style.borderRadius = '3px';
-			 controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
-			 controlUI.style.cursor = 'pointer';
-			 controlUI.style.marginBottom = '22px';
-			 controlUI.style.textAlign = 'center';
-			 controlUI.title = 'Click to recenter the map';
-			 controlDiv.appendChild(controlUI);
-
-			 /* Set CSS for the control interior. */
-			 var controlText = document.createElement('div');
-			 controlText.style.color = 'rgb(25,25,25)';
-			 controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
-			 controlText.style.fontSize = '16px';
-			 controlText.style.lineHeight = '38px';
-			 controlText.style.paddingLeft = '5px';
-			 controlText.style.paddingRight = '5px';
-			 controlText.innerHTML = 'Toggle Markers/Clusters/Heatmap';
-			 controlUI.appendChild(controlText);
-
-			 /* Setup the click event listeners: simply set the
-				map to Chicago. */
-			 controlUI.addEventListener('click', function() {
-				 toggleVisualizations();
-			 });
-			 
-		 }
+		 var colors20 = d3.scale.category20().range();
 
 		 jQuery(document).ready(function($){
-			 var	main_color = '#0085a1',
-					saturation_value= -20,
-					brightness_value= 5;
-			 var styles = [ 
-				 {
-					 elementType: "labels",
-					 stylers: [
-						 {saturation: saturation_value}
-					 ]
-				 },  
-				 {
-					 featureType: "poi",
-					 elementType: "labels",
-					 stylers: [
-						 {visibility: "off"}
-					 ]
-				 },
-				 {
-					 featureType: 'road.highway',
-					 elementType: 'labels',
-					 stylers: [
-						 {visibility: "off"}
-					 ]
-				 }, 
-				 {
-					 featureType: "road.local", 
-					 elementType: "labels.icon", 
-					 stylers: [
-						 {visibility: "off"} 
-					 ] 
-				 },
-				 {
-					 featureType: "road.arterial", 
-					 elementType: "labels.icon", 
-					 stylers: [
-						 {visibility: "off"}
-					 ] 
-				 },
-				 {
-					 featureType: "road",
-					 elementType: "geometry.stroke",
-					 stylers: [
-						 {visibility: "off"}
-					 ]
-				 },
-				 { 
-					 featureType: "transit", 
-					 elementType: "geometry.fill", 
-					 stylers: [
-						 { hue: main_color },
-						 { visibility: "on" }, 
-						 { lightness: brightness_value }, 
-						 { saturation: saturation_value }
-					 ]
-				 }, 
-				 {
-					 featureType: "poi",
-					 elementType: "geometry.fill",
-					 stylers: [
-						 { hue: main_color },
-						 { visibility: "on" }, 
-						 { lightness: brightness_value }, 
-						 { saturation: saturation_value }
-					 ]
-				 },
-				 {
-					 featureType: "poi.government",
-					 elementType: "geometry.fill",
-					 stylers: [
-						 { hue: main_color },
-						 { visibility: "on" }, 
-						 { lightness: brightness_value }, 
-						 { saturation: saturation_value }
-					 ]
-				 },
-				 {
-					 featureType: "poi.sport_complex",
-					 elementType: "geometry.fill",
-					 stylers: [
-						 { hue: main_color },
-						 { visibility: "on" }, 
-						 { lightness: brightness_value }, 
-						 { saturation: saturation_value }
-					 ]
-				 },
-				 {
-					 featureType: "poi.attraction",
-					 elementType: "geometry.fill",
-					 stylers: [
-						 { hue: main_color },
-						 { visibility: "on" }, 
-						 { lightness: brightness_value }, 
-						 { saturation: saturation_value }
-					 ]
-				 },
-				 {
-					 featureType: "poi.business",
-					 elementType: "geometry.fill",
-					 stylers: [
-						 { hue: main_color },
-						 { visibility: "on" }, 
-						 { lightness: brightness_value }, 
-						 { saturation: saturation_value }
-					 ]
-				 },
-				 {
-					 featureType: "transit",
-					 elementType: "geometry.fill",
-					 stylers: [
-						 { hue: main_color },
-						 { visibility: "on" }, 
-						 { lightness: brightness_value }, 
-						 { saturation: saturation_value }
-					 ]
-				 },
-				 {
-					 featureType: "transit.station",
-					 elementType: "geometry.fill",
-					 stylers: [
-						 { hue: main_color },
-						 { visibility: "on" }, 
-						 { lightness: brightness_value }, 
-						 { saturation: saturation_value }
-					 ]
-				 },
-				 {
-					 featureType: "landscape",
-					 stylers: [
-						 { hue: main_color },
-						 { visibility: "on" }, 
-						 { lightness: brightness_value }, 
-						 { saturation: saturation_value }
-					 ]
-					 
-				 },
-				 {
-					 featureType: "road",
-					 elementType: "geometry.fill",
-					 stylers: [
-						 { hue: main_color },
-						 { visibility: "on" }, 
-						 { lightness: brightness_value }, 
-						 { saturation: saturation_value }
-					 ]
-				 },
-				 {
-					 featureType: "road.highway",
-					 elementType: "geometry.fill",
-					 stylers: [
-						 { hue: main_color },
-						 { visibility: "on" }, 
-						 { lightness: brightness_value }, 
-						 { saturation: saturation_value }
-					 ]
-				 }, 
-				 {
-					 featureType: "water",
-					 elementType: "geometry",
-					 stylers: [
-						 { hue: main_color },
-						 { visibility: "on" }, 
-						 { lightness: brightness_value }, 
-						 { saturation: saturation_value }
-					 ]
-				 }
-			 ];
-<!-- var styles = [ -->
-<!--               {featureType: 'poi.attraction', -->
-<!--                stylers: [{color: '#fce8b2'}] -->
-<!--               }, -->
-<!--               {featureType: 'road.highway', -->
-<!--                stylers: [{hue: '#0277bd'}, {saturation: -50}] -->
-<!--               }, -->
-<!--               {featureType: 'road.highway', -->
-<!--                elementType: 'labels.icon', -->
-<!--                stylers: [{hue: '#000'}, {saturation: 100}, {lightness: 50}] -->
-<!--               }, -->
-<!--               {featureType: 'landscape', -->
-<!--                stylers: [{hue: '#259b24'}, {saturation: 10}, {lightness: -22}] -->
-<!--               } -->
-<!--         ]; -->
-	
-		 /* 
-				$('div#map').attr("width", $("div.container").width());
-				$('div#map').attr("height", $("div.container").width()); */
-
+			 
 			 myLatLng = {lat:{{ center[0] }},
 						 lng:{{ center[1] }}};
 
-			 /* Create an array of styles. */
-			 /* http://googlemaps.github.io/js-samples/styledmaps/wizard/index.html */
-			 /* var styles = [
-				{ "featureType": "road",
-				"elementType": "geometry.stroke",
-				"stylers": [ { "invert_lightness": true },
-				{ "visibility": "on" },
-				{ "color": "#d88080" },
-				{ "weight": 0.1 } ] } ]; */
-				 var styledMap = new google.maps.StyledMapType(styles,
-															   {name: "Styled Map"});
+			 var styledMap = new google.maps.StyledMapType(styles,
+														   {name: "Styled Map"});
 			 
 			 map = new google.maps.Map(document.getElementById('map'), {
 				 zoom: 13,
@@ -423,9 +187,17 @@
 			 /* passing in this DIV. */
 			 var centerControlDiv = document.createElement('div');
 			 var centerControl = new CenterControl(centerControlDiv, map);
-
 			 centerControlDiv.index = 1;
 			 map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(centerControlDiv);
+
+			 var topControlDiv = document.createElement('div');
+			 var topControl = new TopControl(topControlDiv, map);
+			 topControlDiv.index = 2;
+			 map.controls[google.maps.ControlPosition.TOP_CENTER].push(topControlDiv);
+			 
+			 function getPoints() {
+				 return heatpoints;
+			 }
 			 
 			 /* Heatmap */
 			 heatmap = new google.maps.visualization.HeatmapLayer({
@@ -436,14 +208,6 @@
 				 maxIntensity: 20
 			 });
 			 
-			 var dataset = {{ photos|tojson }};
-			 var clusters = {{ cluster_shape|tojson }};
-			 var num_labels = {{ num_labels }};
-			 var max_label = {{ max_label }};
-			 var top3 = {{ top3|tojson }};
-			 
-			 var colors20 = d3.scale.category20().range();
-
 			 if (max_label > 20){
 				 var pinColors = d3.scale.linear()
 								   .domain(linspace(0, max_label, 20))
@@ -467,13 +231,6 @@
 				  	 weight: parseFloat(d["kde_score_2"])}
 				 );
 
-				 /* 
-					heatpoints.push({
-					location: new google.maps.LatLng(
-					parseFloat(d["latitude"]),
-					parseFloat(d["longitude"]))}
-					); */
-
 				 var pc = pinColors(parseFloat(d["label"]));
 				 var latlng = {lat: parseFloat(d["latitude"]),
 							   lng: parseFloat(d["longitude"])};
@@ -495,19 +252,10 @@
 				 markers.push(circle);
 
 				 var contentstring =  "<a href=\""+ d["url_m"] + "\">"
-									+ "<img src=\""+ d["url_t"] + "\">"
+									+ "<img src=\""+ d["url_m"] + "\""
+									+ "height=\"200\"" + ">"
 									+ "</a>";
 
-				 /* 
-					var contentstring = "<p>" + d["description"] + "<\p>"
-					+ "<p><div class=\"tags\">"
-					+ d["tags"] + "</div><\p>"
-					+ "<a href=\""+ d["url_m"] + "\">"
-					+ "<img src=\""+ d["url_t"] + "\">"
-					+ "</a>"
-					+ "<p>" + d["datetaken"] + "</p>"
-					+ "<p>" + d["label"] + "</p>";
-				  */
 				 circle.addListener('click', function() {
 					 infowindow.setContent(contentstring);
 					 infowindow.open(map, circle);						 						 
@@ -518,7 +266,6 @@
 			 var directionsService = new google.maps.DirectionsService;
 			 var directionsDisplays = [];
 			 var k=0;
-			 /* 			 directionsDisplay.setMap(map); */
 
 			 /* top 3 clusters */
 			 jQuery.each(top3, function(i, d) {
@@ -698,7 +445,7 @@
 			 }); /* addListner */
 
 			 /* calculate the minimum dlat and dlon for cluster radii */
-			 var R = 6371.0;
+			 var R = 6371.0/1.6;  /* 1.6 for miles */
 			 var d_min_m = 0.5;
 
 			 var tan = Math.tan(d_min_m/2/R);
@@ -743,14 +490,12 @@
 			 showTop3();
 
 			 /* center on resize */
-			 google.maps.event.addDomListener(window, 'load', initMap);
 			 google.maps.event.addDomListener(window, "resize", function() {
 				 google.maps.event.trigger(map, "resize");
 				 myLatLng = {lat:{{ center[0] }},
 							 lng:{{ center[1] }}};
 				 map.setCenter(myLatLng); 
 			 });
-
 			 
 			 // var map_options = {
 			 //   	center: new google.maps.LatLng(latitude, longitude),
@@ -774,98 +519,8 @@
 				 //     visible: true,
 				 //  	icon: marker_url,
 				 // });
-		 });
-
-		 
-		 function initMap() {
-			 
-		 }  /* initMap */
-
-		 
-		 function calculateAndDisplayRoute(directionsService, directionsDisplay,
-										   originLatLng, destLatLng){
-											   directionsService.route({
-												   origin: originLatLng,
-												   destination: destLatLng,
-												   travelMode: google.maps.TravelMode.WALKING
-											   }, function(response, status) {
-												   if (status === google.maps.DirectionsStatus.OK) {
-													   directionsDisplay.setDirections(response);
-												   } else {
-													   window.alert('Directions request failed due to ' + status);
-												   }
-											   });
-											   directionsDisplay.setOptions( { suppressMarkers: true } );
-		 }
-		 
-		 function getPoints() {
-			 return heatpoints;
-		 }
-		 
-		 function toggleVisualizations() {
-
-			 /* 				 markers --> clusters */
-			 if (is_marker==1){
-				 clearMarkers();
-				 showClusters();
-				 is_marker=2;
-			 }
-			 /* heatmap --> markers */
-			 else if (is_marker==0){
-				 heatmap.setMap(null);
-				 clearTop3();
-				 showMarkers();
-				 showTop3();
-				 is_marker=1;
-			 }
-			 /* clusters --> heatmap */
-			 else{
-				 clearClusters();
-				 heatmap.setMap(map);
-				 showTop3();
-				 is_marker = 0;
-			 }
-
-		 }
-
-		 function clearMarkers() {
-			 for (var i = 0; i < markers.length; i++) {
-				 markers[i].setMap(null);
-			 }
-		 }
-
-		 function showMarkers() {
-			 for (var i = 0; i < markers.length; i++) {
-				 markers[i].setMap(map);
-			 }
-		 }
-
-		 function showTop3() {
-			 for (var i = 0; i < top3_markers.length; i++) {
-				 top3_markers[i].setMap(map);
-			 }
-		 }
-
-		 function clearTop3() {
-			 for (var i = 0; i < top3_markers.length; i++) {
-				 top3_markers[i].setMap(null);
-			 }
-		 }
-
-
-		 function clearClusters() {
-			 for (var i = 0; i < ellipses.length; i++) {
-				 ellipses[i].setMap(null);
-			 }
-		 }
-
-		 function showClusters() {
-			 for (var i = 0; i < ellipses.length; i++) {
-				 ellipses[i].setMap(map);
-			 }
-		 }
-
-
+		 });  /* document.ready */
+		 	 
 		 /* Do not close the dropdown when select is on */
 		 $("document").ready(function(){
 			 $('select').click(function (e) {
@@ -877,9 +532,6 @@
 
 		<!-- <script async defer -->
 		<!-- src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA&signed_in=true&libraries=visualization&callback=initMap"></script> -->
-
-		
-		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 
 		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA&signed_in=true&libraries=visualization&extension=.js"></script>
 
