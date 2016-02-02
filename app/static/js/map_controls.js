@@ -32,6 +32,38 @@ function CenterControl(controlDiv, map) {
 	
 }
 
+function TopControl(controlDiv, map) {
+
+	/* Set CSS for the control border. */
+	var controlUI = document.createElement('div');
+	controlUI.setAttribute("id", "toggleButton")
+	controlUI.style.backgroundColor = '#fff';
+	controlUI.style.border = '2px solid #fff';
+	controlUI.style.borderRadius = '3px';
+	controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
+	controlUI.style.cursor = 'pointer';
+	controlUI.style.marginBottom = '22px';
+	controlUI.style.textAlign = 'center';
+	controlUI.title = 'Click to recenter the map';
+	controlDiv.appendChild(controlUI);
+
+	/* Set CSS for the control interior. */
+	var controlText = document.createElement('div');
+	controlText.style.color = 'rgb(25,25,25)';
+	controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+	controlText.style.fontSize = '16px';
+	controlText.style.lineHeight = '38px';
+	controlText.style.paddingLeft = '5px';
+	controlText.style.paddingRight = '5px';
+	controlText.innerHTML = '<div id="top-control">' + address + '<br>within '
+		+ distance + ' miles' + '<br>at ' +
+		hour + '</div>';
+	controlUI.appendChild(controlText);
+	
+}
+
+
+
 function calculateAndDisplayRoute(directionsService, directionsDisplay,
 								  originLatLng, destLatLng){
 	directionsService.route({
@@ -52,8 +84,7 @@ function calculateAndDisplayRoute(directionsService, directionsDisplay,
 
 
 function toggleVisualizations() {
-
-	/* 				 markers --> clusters */
+	/* markers --> clusters */
 	if (is_marker==1){
 		clearMarkers();
 		showClusters();

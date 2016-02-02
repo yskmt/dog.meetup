@@ -10,7 +10,6 @@ from flask import request
 
 import numpy as np
 from sklearn.cluster import DBSCAN
-from sklearn.metrics import silhouette_score
 from sklearn.neighbors import KernelDensity
 from sklearn.externals import joblib
 
@@ -346,7 +345,6 @@ AND photo_data_table.longitude < {lon_max};
 
     return render_template("map.html",
                            photos=query_results.to_dict(orient='index'),
-                           num_labels=len(set(query_results['label'])),
                            max_label=query_results['label'].max(),
                            address=query_address,
                            hour=datetime.strptime(str(query_time), "%H").strftime("%-I %p"),

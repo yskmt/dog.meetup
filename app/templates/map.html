@@ -12,6 +12,9 @@
 		<!-- send values to javascript -->
 		<meta id="hour" data-name="{{ hour }}">
 		<meta id="hour_24" data-name="{{ hour_24 }}">
+		<meta id="address" data-name="{{ address }}">
+		<meta id="distance" data-name="{{ distance }}">
+				
 		<meta id="kde_score_max" data-name="{{ kde_score_max }}">
 		<meta id="tempfile" data-name="{{ tempfile }}">
 
@@ -37,7 +40,7 @@
 	<body>
 
 		<!-- Fixed navbar -->
-		<nav class="navbar navbar-inverse navbar-fixed-top">
+		<nav class="navbar navbar-inverse">
 			<div class="container">
 				<div class="navbar-header">
 					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
@@ -127,7 +130,6 @@
 			</div>
 		</nav>
 
-
 		<div id="map"></div>
 		
 		<!-- render map -->
@@ -143,14 +145,17 @@
 		 var ellipses = [];
 		 var is_marker = 0; /* 0: heatmap, 1: markers, 2: cluster */
 		 var info_window_cluster;
+		 
 		 var hour = $('meta#hour').data()['name'];
 		 var hour_24 = $('meta#hour_24').data()['name'];
+		 var address = $('meta#address').data()['name'];
+		 var distance = $('meta#distance').data()['name'];
+		 
 		 var kde_score_max = $('meta#kde_score_max').data()['name'];
 		 var tempfile = $('meta#tempfile').data()['name'];
 		 
 		 var dataset = {{ photos|tojson }};
 		 var clusters = {{ cluster_shape|tojson }};
-		 var num_labels = {{ num_labels }};
 		 var max_label = {{ max_label }};
 		 var top3 = {{ top3|tojson }};
 
@@ -182,10 +187,14 @@
 			 /* passing in this DIV. */
 			 var centerControlDiv = document.createElement('div');
 			 var centerControl = new CenterControl(centerControlDiv, map);
-
 			 centerControlDiv.index = 1;
 			 map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(centerControlDiv);
 
+			 var topControlDiv = document.createElement('div');
+			 var topControl = new TopControl(topControlDiv, map);
+			 topControlDiv.index = 2;
+			 map.controls[google.maps.ControlPosition.TOP_CENTER].push(topControlDiv);
+			 
 			 function getPoints() {
 				 return heatpoints;
 			 }
@@ -436,7 +445,7 @@
 			 }); /* addListner */
 
 			 /* calculate the minimum dlat and dlon for cluster radii */
-			 var R = 6371.0;
+			 var R = 6371.0/1.6;  /* 1.6 for miles */
 			 var d_min_m = 0.5;
 
 			 var tan = Math.tan(d_min_m/2/R);
