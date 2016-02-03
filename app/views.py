@@ -62,6 +62,11 @@ def get_stars(score):
 def cesareans_input():
     return render_template("input.html")
 
+@app.route('/mobile')
+def mobile_input():
+    return render_template("mobile.html")
+
+
 @app.route('/labels')
 def labels():
     return render_template("labels_dog.txt")

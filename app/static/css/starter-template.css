@@ -3,8 +3,16 @@ body {
     background: url(../imgs/group-dog-training.jpg) no-repeat;
     position: relative;
     background-position: bottom; /*Positioning*/
-    background-size: 100% auto;
+    background-size: 100% 100%;
 }
+
+body#mobile {
+    background: url(../imgs/group-dog-training.jpg) no-repeat;
+    position: relative;
+    background-size: auto auto;
+    background-position: center;
+}
+
 
 .starter-template {
   /* padding: 40px 15px; */
