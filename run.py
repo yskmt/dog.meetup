@@ -1,4 +1,4 @@
-#!/home/ubuntu/anaconda2/bin/python
+#!/Users/ysakamoto/anaconda/bin/python
 from app import app
 app.run(debug = True)
 

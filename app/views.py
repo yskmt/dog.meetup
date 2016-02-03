@@ -23,9 +23,9 @@ from app.cluster_photos import latlon_to_dist, get_bbox
 
 default_address = 'Golden Gate Park, San Francisco'
 
-username = 'ubuntu'
+username = 'ysakamoto'
 hostname = 'localhost'
-dbname = 'photo_db'
+dbname = 'aws_db'
 
 # global: googlenet categoreis of dog breeds
 categories_dog = [151, 152, 153, 154, 155, 156, 157, 158, 159, 160,
@@ -65,7 +65,6 @@ def cesareans_input():
 @app.route('/mobile')
 def mobile_input():
     return render_template("mobile.html")
-
 
 @app.route('/labels')
 def labels():
