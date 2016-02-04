@@ -166,7 +166,8 @@ function showArrays(event, cluster_info, myLatLng) {
 }
 
 
-function draw_dog_marker(i, d, pinColors, map, icon_url){
+function draw_dog_marker(i, d, pinColors, map, icon_url,
+						 directionsDisplays, directionsService, k){
 	
 	var pc = pinColors(parseFloat(d["label"])).slice(1);
 	var latlng = {lat: parseFloat(d["latitude"]),
@@ -199,24 +200,25 @@ function draw_dog_marker(i, d, pinColors, map, icon_url){
 
 	}); /* addListner */
 
-	// directionsDisplays.push(
-	// 	new google.maps.DirectionsRenderer({
-	// 		polylineOptions: {
-	// 			strokeColor: '#'+pc
-	// 		},
-	// 		preserveViewport: true
-	// 	})
-	// );
-
-	// calculateAndDisplayRoute(directionsService, directionsDisplays[k],
-	// 						 myLatLng, latlng);
-	// directionsDisplays[k].setMap(map);
-	// k += 1;
-
+	directionsDisplays.push(
+		new google.maps.DirectionsRenderer({
+			polylineOptions: {
+				strokeColor: '#000000'
+			},
+			preserveViewport: true
+		})
+	);
+	
+	calculateAndDisplayRoute(directionsService, directionsDisplays[k],
+							 myLatLng, latlng);
+	directionsDisplays[k].setMap(map);
+	k += 1;
+	
 	circle.setMap(map);
 	
 	return {info_window: info_window,
-			marker: circle};
+			marker: circle,
+			k: k};
 }
 
 
