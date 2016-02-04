@@ -405,7 +405,6 @@
 			 }
 			 
 			 map.fitBounds(bounds);
-			 /* 			 map.setCenter(center_latlng); */
 			 
 			 /* center on resize */
 			 google.maps.event.addDomListener(window, "resize", function() {
@@ -419,46 +418,24 @@
 				 google.maps.event.trigger(map, "resize");
 				 myLatLng = {lat:{{ center[0] }},
 							 lng:{{ center[1] }}};
-				 /* 				 map.setCenter(myLatLng); */
-				 map.fitBounds(bounds);				 
-				 
-				 /* new_boundary = new google.maps.LatLngBounds();
-
-					for(index in top3_markers){
-					position = markers[index].position;
-					new_boundary.extend(position);
-					}
-
-					map.fitBounds(new_boundary);
-				  */
-
+				 map.fitBounds(bounds);
+				 map.setZoom(map.getZoom() - 1);
 				 
 			 });
+
+			 var map_loaded = 1;
+			 google.maps.event.addListener(map, 'tilesloaded', function() {
+				 // Visible tiles loaded!
+				 if (map_loaded){
+					 map_loaded=0;
+					 map.setZoom(map.getZoom() - 1);
+				 }
+			 });
 			 
-			 // var map_options = {
-			 //   	center: new google.maps.LatLng(latitude, longitude),
-				 //   	zoom: map_zoom,
-				 //   	panControl: false,
-				 //   	zoomControl: true,
-				 //   	mapTypeControl: false,
-				 //   	streetViewControl: false,
-				 //   	mapTypeId: google.maps.MapTypeId.ROADMAP,
-				 //   	scrollwheel: false,
-				 //   	styles: style,
-				 // 	zoomControlOptions: {
-			 // 		style: google.maps.ZoomControlStyle.SMALL,
-				 // 		position: google.maps.ControlPosition.BOTTOM_CENTER
-			 // 	}
-			 // }
-			 // var map = new google.maps.Map(document.getElementById('map'), map_options);			
-			 // var marker = new google.maps.Marker({
-			 //   	position: new google.maps.LatLng(latitude, longitude),
-				 //     map: map,
-				 //     visible: true,
-				 //  	icon: marker_url,
-				 // });
+			 
+
 		 });  /* document.ready */
-		 
+
 		 /* Do not close the dropdown when select is on */
 		 $("document").ready(function(){
 			 $('select').click(function (e) {
