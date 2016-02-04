@@ -269,10 +269,11 @@
 			 var directionsService = new google.maps.DirectionsService;
 			 var directionsDisplays = [];
 			 var k=0;
+			 var dog_array = shuffle([0,1,2,3,4,5,6,7,8,9]);
 			 /* top clusters */
 			 jQuery.each(top3, function(i, d) {
 				 var ddm = draw_dog_marker(i, d, pinColors, map,
-										   "{{ url_for('static', filename='dog.png') }}",
+										   "{{ url_for('static', filename='imgs/dogs/') }}" + dog_array[k] + ".png",
 										   directionsDisplays,
 										   directionsService,
 										   k);
@@ -402,8 +403,7 @@
 			 for(index in top3_markers){
 				 position = top3_markers[index].position;
 				 bounds.extend(position);
-			 }
-			 
+			 }			 
 			 map.fitBounds(bounds);
 			 
 			 /* center on resize */
@@ -419,7 +419,7 @@
 				 myLatLng = {lat:{{ center[0] }},
 							 lng:{{ center[1] }}};
 				 map.fitBounds(bounds);
-				 map.setZoom(map.getZoom() - 1);
+				 /* 				 map.setZoom(map.getZoom() - 1); */
 				 
 			 });
 
@@ -428,7 +428,7 @@
 				 // Visible tiles loaded!
 				 if (map_loaded){
 					 map_loaded=0;
-					 map.setZoom(map.getZoom() - 1);
+					 /* 					 map.setZoom(map.getZoom() - 1); */
 				 }
 			 });
 			 

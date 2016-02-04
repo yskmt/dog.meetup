@@ -268,7 +268,7 @@ AND photo_data_table.longitude < {lon_max};
     query_results['kde_score_2'] = kde_score_2
     
     # take top 3 clusters
-    n_tops = 1
+    n_tops = 3
     label_groups = query_results[['kde_score_2', 'label']].groupby('label')
     label_measure = label_groups.count()
 
