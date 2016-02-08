@@ -345,3 +345,7 @@ AND photo_data_table.longitude < {lon_max};
                            top3=top3_repr.to_dict(),
                            tempfile=f.name,
                            center=query_latlon)
+
+@app.route('/slides')
+def slides():
+    return render_template("slides.html")
