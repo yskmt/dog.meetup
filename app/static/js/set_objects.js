@@ -167,8 +167,9 @@ function showArrays(event, cluster_info, myLatLng) {
 
 
 function draw_dog_marker(i, d, pinColors, map, icon_url,
-						 directionsDisplays, directionsService, k){
-	
+						 directionsDisplays, directionsService, k,
+						 dog_info_window)
+{
 	var pc = pinColors(parseFloat(d["label"])).slice(1);
 	var latlng = {lat: parseFloat(d["latitude"]),
 				  lng: parseFloat(d["longitude"])};
@@ -191,12 +192,11 @@ function draw_dog_marker(i, d, pinColors, map, icon_url,
 	});
 	
 	var contentstring = "<p>" + d["kde_score_2"] + "</p>";
-	var info_window = new google.maps.InfoWindow();
 	
 	circle.addListener('click', function(event) {
 
-		open_dog_info(event.latLng.lat(), event.latLng.lng(),
-					  info_window);
+		dog_info_window = open_dog_info(event.latLng.lat(), event.latLng.lng(),
+										dog_info_window);
 
 	}); /* addListner */
 
@@ -216,13 +216,13 @@ function draw_dog_marker(i, d, pinColors, map, icon_url,
 	
 	circle.setMap(map);
 	
-	return {info_window: info_window,
+	return {info_window: dog_info_window,
 			marker: circle,
 			k: k};
 }
 
 
-function open_dog_info(lat, lng, info_window){
+function open_dog_info(lat, lng, dog_info_window){
 	
 	/* ajax request */
 	$.getJSON('/_add_numbers', {
@@ -238,10 +238,12 @@ function open_dog_info(lat, lng, info_window){
 		$.each(data.result[0], function(i,d){
 			/* v: time of day, f: string */
 			if (+i == +hour_24){
-				score.push([{v: [(+i), 0, 0], f: i}, d, 'red', getAMPM(+i)]);
+				score.push([{v: [(+i), 0, 0], f: i}, d, 'red',
+							getAMPM(+i)+': '+d]);
 			}
 			else{
-				score.push([{v: [(+i), 0, 0], f: i}, d, 'color: #76A7FA', getAMPM(+i)]);
+				score.push([{v: [(+i), 0, 0], f: i}, d, 'color: #76A7FA',
+							getAMPM(+i)+': '+d]);
 			}
 		});
 
@@ -265,7 +267,7 @@ function open_dog_info(lat, lng, info_window){
 				ticks: [[0,0,0], [6,0,0], [12,0,0], [18,0,0], [24,0,0]]
 			},
 			vAxis: {
-				title: 'level',
+				title: 'dog level',
 				minValue: 0,
 				maxValue: 5.5,
 				ticks: [0, 1, 2, 3, 4, 5]
@@ -274,16 +276,18 @@ function open_dog_info(lat, lng, info_window){
 		};
 
 		var node = document.createElement('div'),
-			chart = new google.visualization.ColumnChart(node);
-		
+			chart = new google.visualization.ColumnChart(node),
+			info_window = dog_info_window;
+
 		chart.draw(data, options);
 		
 		/* Replace the info window's content and position. */
-		info_window.setContent(node);
+		dog_info_window.setContent(node);
 		info_window.setPosition({lat: lat, lng: lng});
 		info_window.open(map);
 	});
 
+	return dog_info_window;
 
 }
 
