@@ -33,6 +33,7 @@ import pandas as pd
 
 import time
 import datetime
+import os
 
 from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists, create_database
@@ -377,7 +378,10 @@ if __name__ == "__main__":
 
     plt.figure(figsize=(5,5))        
     plt.plot(range(1,13), month_counts, '-o', linewidth=2, c=sb.color_palette()[1])
+    plt.xticks(np.arange(1, 13,2),
+               ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov'],fontsize=15)
     plt.xlim([1, 12])
+    plt.ylim([0, 8600])
     plt.tight_layout()
     plt.savefig('month.png')        
     plt.show()
@@ -432,7 +436,7 @@ if __name__ == "__main__":
 # sunday is 0
 day_counts = []
 photo_data_from_sql = []
-for i in range(1, 31):
+for i in range(1, 32):
 
     sql_query = """
     SELECT DISTINCT id,latitude,longitude,description,tags,url_t 
@@ -449,39 +453,63 @@ for i in range(1, 31):
 
     day_counts.append(photo_data_from_sql[i-1].shape[0])
 
-    
+# corrections
+day_counts[11] = 1
+day_counts[12] = 1
+day_counts[13] = 2
+day_counts[14] = 10
+day_counts[22] = 129
+day_counts[29] = 87
+
 plt.figure(figsize=(5,5))
-plt.plot(range(1,31), day_counts, '-o', linewidth=2, c=sb.color_palette()[2])
+plt.plot(range(1,32), day_counts, '-o', linewidth=2, c=sb.color_palette()[2])
+plt.xlabel('date', fontsize=15)
+plt.xticks(np.arange(0, 35, 5),
+           ['0th', '5th', '10th', '15th', '20th', '25th', '30th'],fontsize=12)
 plt.xlim([1,31])
 plt.tight_layout()
 plt.savefig('10-11-nyc.png')
 plt.show()
 
 
+# check NYC october 2011 photos
+# connect:
+dbname = 'photo_db'
+username = 'ysakamoto'
 
-sql_query = """
-SELECT DISTINCT *
-FROM photo_data_table
+con = None
+con = psycopg2.connect(database = dbname, user = username)
 
-WHERE datetaken >= '{day}'::date
-AND datetaken < ('{day}'::date + '1 day'::interval)
-AND latitude > {lat_min} AND latitude < {lat_max} 
-AND longitude > {lon_min} AND longitude < {lon_max}
-ORDER BY views;
-""".format(day='10-%02d-11' %22, lon_min=-74.3, lat_min=40.5, lon_max=-73.64,lat_max=40.94)
-photos = pd.read_sql_query(sql_query,con)
-# print 'hour: ', i, photo_data_from_sql.shape[0], 'hits'
+dates = [12, 13, 14, 15, 22, 23, 30]
+
+for date in dates:
+
+    sql_query = """
+    SELECT DISTINCT *
+    FROM photo_data_table
+
+    WHERE datetaken >= '{day}'::date
+    AND datetaken < ('{day}'::date + '1 day'::interval)
+    AND latitude > {lat_min} AND latitude < {lat_max} 
+    AND longitude > {lon_min} AND longitude < {lon_max}
+    ORDER BY views;
+    """.format(day='10-%02d-11' %date, lon_min=-74.3, lat_min=40.5, lon_max=-73.64,lat_max=40.94)
+    photos = pd.read_sql_query(sql_query,con)
+    # print 'hour: ', i, photo_data_from_sql.shape[0], 'hits'
 
 
-for url in photos['url_s']:
-    print url
-    photo_name = url, '10-22/%s' %(url.split('/')[-1])
+    for url in photos['url_s']:
+        print url
+        photo_name = url, '10-%d/%s' %(date, url.split('/')[-1])
 
-    if not os.path.exists(photo_name[1]):
-        urllib.urlretrieve(*photo_name)
+        if not os.path.exists(photo_name[1]):
+            urllib.urlretrieve(*photo_name)
 
 
-# for i in range(20):
-#     for j in range(20):
-#         print 'url('+ popu[i*10+j] +') ' + str(i*100) +'px '+ str(j*100) + 'px no-repeat,' 
-
+# correction
+# 12: 1
+# 13: 1
+# 14: 2
+# 15: 10
+# 23: 129
+# 30: 87

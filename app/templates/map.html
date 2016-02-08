@@ -168,6 +168,8 @@
 		 var colors20 = d3.scale.category20().range();
 
 		 jQuery(document).ready(function($){
+
+			 var dog_info_window = new google.maps.InfoWindow();
 			 
 			 myLatLng = {lat:{{ center[0] }},
 						 lng:{{ center[1] }}};
@@ -281,8 +283,7 @@
 										   "{{ url_for('static', filename='imgs/dogs/') }}" + dog_array[k] + ".png",
 										   directionsDisplays,
 										   directionsService,
-										   k);
-				 var dog_info_window = ddm.info_window;
+										   k, dog_info_window);
 				 top3_markers.push(ddm.marker);
 				 ddm.marker.setMap(map);
 				 k = ddm.k;

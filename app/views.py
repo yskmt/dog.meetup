@@ -125,10 +125,14 @@ def map_output():
             location = geolocator.geocode(query_address)
             query_latlon = (location.latitude, location.longitude)
         except:
-            geolocator = GoogleV3(api_key='AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA')
-            location = geolocator.geocode(query_address)
-            query_latlon = (location.latitude, location.longitude)
-            
+            try:
+                geolocator = GoogleV3(api_key='AIzaSyB7LvwvLJN0l04rFfHbIyUBsqi61vP6qWA')
+                location = geolocator.geocode(query_address)
+                query_latlon = (location.latitude, location.longitude)
+            except:
+                return render_template("redirect.html",
+                                       error_msg="The querried address does not exist.")
+                
     print 'latlon = ', query_latlon
     print 'time = ', query_time
     print 'address = ', query_address
@@ -177,19 +181,8 @@ AND photo_data_table.longitude < {lon_max};
     
     # no photos around the center
     if xy[['x','y']].shape[0] == 0:
-        return render_template("map.html",
-                               photos=[{}],
-                               num_labels=0,
-                               max_label=0,
-                               address=query_address,
-                               hour=datetime.strptime(str(query_time), "%H").strftime("%-I %p"),
-                               hour_24=datetime.strptime(str(query_time), "%H").strftime("%-H"),
-                               distance=query_distance,
-                               clusters=[{}],
-                               cluster_shape=[{}],
-                               kde_score_max=1,
-                               top3=[{}],
-                               center=query_latlon)
+        return render_template("redirect.html",
+                               error_msg="There is no dogs around the querried area and time.")
     
     # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html
     labels = DBSCAN(eps=0.3, metric='euclidean', min_samples=5)\
@@ -206,20 +199,8 @@ AND photo_data_table.longitude < {lon_max};
     query_results = query_results[query_results['label']!=-1]
 
     if query_results.size == 0:
-        return render_template("map.html",
-                               photos=[{}],
-                               num_labels=0,
-                               max_label=0,
-                               address=query_address,
-                               hour=datetime.strptime(str(query_time), "%H").strftime("%-I %p"),
-                               hour_24=datetime.strptime(str(query_time), "%H").strftime("%-H"),
-                               distance=query_distance,
-                               clusters=[{}],
-                               cluster_shape=[{}],
-                               kde_score_max=1,
-                               top3=[{}],
-                               center=query_latlon)
-
+        return render_template("redirect.html",
+                               error_msg="There is no dogs around the querried area and time.")
         
     # KDE
     kde = KernelDensity(bandwidth=0.4,
@@ -282,19 +263,8 @@ AND photo_data_table.longitude < {lon_max};
     top3_repr = pd.concat(top3_repr, axis=1)
 
     if query_results.size == 0:
-        return render_template("map.html",
-                               photos=[{}],
-                               num_labels=0,
-                               max_label=0,
-                               address=query_address,
-                               hour=datetime.strptime(str(query_time), "%H").strftime("%-I %p"),
-                               hour_24=datetime.strptime(str(query_time), "%H").strftime("%-H"),
-                               distance=query_distance,
-                               clusters=[{}],
-                               cluster_shape=[{}],
-                               kde_score_max=1,
-                               center=query_latlon)
-
+        return render_template("redirect.html",
+                               error_msg="There is no dogs around the querried area and time.")
     
     # gather cluster characteristics
     lb_unique, num_pics = np.unique(labels, return_counts=True)
