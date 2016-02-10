@@ -32,17 +32,17 @@ body#mobile {
 }
 
 H1 {
-    color: DarkOrange;
+    color: Gray;
     text-shadow: -2px -2px 0px #fff,
-    2px -2px 0px #fff, 
+    2px -2px 0px #fff,
     -2px 2px 0px #fff,
     2px 2px 0px #fff;
 }
 
 H2, H3 {
-    color: DarkOrange;
+    color: Gray;
     text-shadow: -1px -1px 0px #fff,
-    1px -1px 0px #fff, 
+    1px -1px 0px #fff,
     -1px 1px 0px #fff,
     1px 1px 0px #fff;
 }
