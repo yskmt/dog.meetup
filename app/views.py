@@ -1,6 +1,6 @@
 import pdb
 
-from flask import render_template, jsonify, g
+from flask import render_template, jsonify, g, send_from_directory, send_file
 from app import app
 from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists, create_database
@@ -316,6 +316,7 @@ AND photo_data_table.longitude < {lon_max};
                            tempfile=f.name,
                            center=query_latlon)
 
-@app.route('/slides')
-def slides():
-    return render_template("slides.html")
+@app.route('/demo')
+def presentation():
+
+    return send_file('static/demo.pdf')
